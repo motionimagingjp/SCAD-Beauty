@@ -1288,7 +1288,7 @@
     }
     bar.hidden = false;
     bar.innerHTML = "";
-    bar.appendChild(el("span", "subbar-label", "対象:"));
+    bar.appendChild(el("span", "subbar-label", state.tab === "restaurant" ? "お相手:" : "対象:"));
     var toggle = el("div", "gender-toggle");
     ["women","men"].forEach(function(g){
       var b = el("button", state.gender===g ? "active":"", genderLabel(g));
