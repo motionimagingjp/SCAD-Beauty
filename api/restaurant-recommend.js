@@ -64,7 +64,10 @@ export default async function handler(req, res) {
       "・喫煙可の店である → タバコが苦手な相手なら避けたほうがよい旨の注意喚起\n" +
       "・横並びのカウンター席がある → 初デートで会話しやすい旨\n" +
       "・お酒（特にワインなど）の品揃えが良い → お酒好きな相手におすすめな旨\n" +
-      "・夜景やロマンチックな眺め（東京タワー、スカイツリーが見えるなど）がある → 理由つきで紹介";
+      "・夜景やロマンチックな眺め（東京タワー、スカイツリーが見えるなど）がある → 理由つきで紹介\n\n" +
+      "dateTipsの文体：「ですます」調は使わず、体言止め・短い言い切りの2フレーズ程度（合計20〜30文字目安）に凝縮してください。\n" +
+      "良い例：「横並びカウンター席あり　正面に座るより会話弾みやすい」「全席禁煙　明るい店内で昼デートにぴったり」\n" +
+      "悪い例：「横並びで座れるカウンター席があり、正面に向かい合うよりも自然に会話が弾みやすいです」（長すぎる・ですます調）";
 
     const prompt =
       "あなたは婚活・恋愛サポートに詳しい、デートのお店選びアドバイザーです。\n" +
@@ -77,7 +80,7 @@ export default async function handler(req, res) {
       "・確認が取れない、または自信がない項目がある場合は、無理に断定せず該当お店の \"unverified\" を true にしてください。\n" +
       "・条件に合う実在のお店が見つからない場合は、無理に別のエリアや料理ジャンルのお店を提案せず、spotsを空配列 [] にしてください。\n" +
       '必ず次のJSON形式のみで回答してください（説明文・前置き・コードブロックの記号は一切付けないでください）:\n' +
-      '{"spots":[{"name":"店名","area":"エリア","desc":"一言紹介（60文字程度）","dateTips":["デート視点のアドバイス","..."],"unverified":true または false}]}';
+      '{"spots":[{"name":"店名","area":"エリア","desc":"一言紹介（60文字程度）","dateTips":["デート視点のアドバイス（体言止め・20〜30文字程度）","..."],"unverified":true または false}]}';
 
     // gemini-flash-latest は Google 側が常に「その時点で推奨されるFlashモデル」を指すように
     // 自動で切り替えてくれるエイリアス。個別バージョン名を指定すると、将来そのモデルが
@@ -159,7 +162,7 @@ export default async function handler(req, res) {
           area: String((s && s.area) || "").slice(0, 30),
           desc: String((s && s.desc) || "").slice(0, 120),
           dateTips: Array.isArray(s && s.dateTips)
-            ? s.dateTips.slice(0, 3).map(function (t) { return String(t).slice(0, 80); })
+            ? s.dateTips.slice(0, 3).map(function (t) { return String(t).slice(0, 40); })
             : [],
           // groundingで確認が取れなかった場合は、個別の断定有無に関わらず全体を「要確認」寄りに倒す
           unverified: !!(s && s.unverified) || !actuallyGrounded
