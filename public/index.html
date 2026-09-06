@@ -1792,6 +1792,19 @@
       if(spots.length===0){
         rWrap.appendChild(emptyState("条件に合うお店が見つかりませんでした。エリアや予算を変えて、下の入力欄から再度相談してみてください。", ICONS.restaurant));
       }
+
+      // 結果に満足しない場合にすぐ試せるよう、検索のたびに「もう一度検索」「最初から」を並べて出す
+      var searchAgainRow = el("div","chip-row");
+      searchAgainRow.style.paddingLeft = "0";
+      searchAgainRow.style.marginTop = "10px";
+      var searchAgainBtn = el("button","chip primary","🔄 もう一度検索する");
+      searchAgainBtn.addEventListener("click", function(){ runRestaurantSearch("他の候補もご提案しますね。"); });
+      searchAgainRow.appendChild(searchAgainBtn);
+      var resetBtn = el("button","chip","🔁 最初から");
+      resetBtn.addEventListener("click", function(){ resetRestaurantFlow(); render(); });
+      searchAgainRow.appendChild(resetBtn);
+      rWrap.appendChild(searchAgainRow);
+
       return rWrap;
     }
     return el("div","");
