@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>スクアド</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="スクアド">
+<meta name="theme-color" content="#a3415a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -882,6 +888,7 @@
       userSelfiePhoto:null, // 「自分に似合うか試す」用の自撮り写真（この端末内のみ保持）
       pendingCompositeStyle:null, // 自撮りアップロード待ちの間、どの髪型で試そうとしていたかを一時保持
       outfit:null,
+      dateCandidates:[], // レストランタブの「候補に入れる」で貯まる店名（オーダーシートに表示）
       seenFashionBadge:false,
       seenRestaurantBadge:false,
       seenOrderBadge:false,
@@ -901,7 +908,7 @@
       restaurantChat:{ started:false, log:[] },
       restaurant:{
         step:null, category:null, mealtime:null,
-        location:null, budgetLabel:null, budgetNote:null, extraNote:null
+        location:null, cuisine:null, budgetLabel:null, budgetNote:null, extraNote:null
       }
     };
     try{
@@ -1073,7 +1080,7 @@
   // それをそのままオーダーシートの文言に反映する（カタログに縛られない）
   var ANALYSIS_LENGTHS  = ["ショート","ミディアム","ロング"];
   var ANALYSIS_BANGS    = ["シースルーバング","流し前髪","前髪なし","ぱっつん前髪","センターパート"];
-  var ANALYSIS_COLORS   = ["黒髪","暗髪ブラウン","赤みブラウン","ベージュ","暗めゴールド","明るめ金髪","オレンジ系ゴールド","アッシュグレー"];
+  var ANALYSIS_COLORS   = ["黒髪","暗髪ブラウン","ブラウン","ベージュ・ハイトーン","アッシュ・グレー","ピンク・レッド・オレンジ","ブルー・パープル・グリーン","ホワイト・ペール"];
   var ANALYSIS_TEXTURES = ["ストレート","ゆるふわウェーブ","強めパーマ","無造作ウェーブ"];
   function pickRandom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
@@ -1558,6 +1565,29 @@
       compBub.innerHTML =
         '<div style="margin-bottom:8px;">「'+entry.styleName+'」で、あなたの雰囲気を確認できました！</div>'+
         '<img src="'+entry.image+'" alt="AI合成イメージ" style="width:100%;border-radius:10px;display:block;">';
+      // 生成結果を見たあと、別の髪型でも試せるよう最初の2ボタンをその場に再表示する
+      var retryRow = el("div","chip-row");
+      retryRow.style.paddingLeft = "0";
+      retryRow.style.marginTop = "10px";
+      var retryWantBtn = el("button","chip primary", "🖼️ なりたい髪型を添付");
+      retryWantBtn.addEventListener("click", function(){
+        resetHairFlow();
+        render();
+        byId("fileScreenshot").click();
+      });
+      retryRow.appendChild(retryWantBtn);
+      var retryUpBtn = el("button","chip primary", ICONS.camera + ' <span style="margin-left:5px;">自撮りで顔型診断する</span>');
+      retryUpBtn.style.display = "inline-flex";
+      retryUpBtn.style.alignItems = "center";
+      retryUpBtn.querySelector("svg").style.width = "14px";
+      retryUpBtn.querySelector("svg").style.height = "14px";
+      retryUpBtn.addEventListener("click", function(){
+        resetHairFlow();
+        render();
+        byId("fileFaceShape").click();
+      });
+      retryRow.appendChild(retryUpBtn);
+      compBub.appendChild(retryRow);
       compWrap.appendChild(compBub);
       return compWrap;
     }
@@ -1715,7 +1745,12 @@
     }
     if(entry.type === "restaurant-result"){
       var rWrap = el("div","catalog-wrap");
-      var badgeLabel = entry.grounded ? "Google検索連携で確認済み" : "AI提案（詳細情報は要確認です。ご予約前に店舗へご確認ください。）";
+      // API呼び出しに失敗した場合、これまでは実際の提案と見分けがつかないまま
+      // サンプルの固定データ（MOCK_RESTAURANT_SPOTS）を表示してしまっていたため、
+      // 「デモ表示中」であることが必ずわかるようにバッジを分ける。
+      var badgeLabel = entry.mock
+        ? "⚠️ デモ表示中（APIエラーのため仮のお店を表示しています。実際の検索結果ではありません）"
+        : (entry.grounded ? "Google検索連携で確認済み" : "AI提案（詳細情報は要確認です。ご予約前に店舗へご確認ください。）");
       var badge = el("span","mock-badge", ICONS.sparkle + ' <span>'+badgeLabel+'</span>');
       badge.style.display = "inline-flex";
       badge.style.alignItems = "center";
@@ -1731,11 +1766,39 @@
         swatch.innerHTML = ICONS.restaurant;
         card.appendChild(swatch);
         var body = el("div","body");
+        var candidateSelected = state.dateCandidates.indexOf(spot.name) !== -1;
         var tipsHtml = (spot.dateTips||[]).map(function(t){ return '<div class="tag" style="display:block;margin-top:4px;">💡 '+t+'</div>'; }).join('');
         body.innerHTML =
           '<div class="title-row"><span class="title">'+spot.name+'</span><span style="font-size:11px;color:var(--ink-faint);">'+(spot.area||"")+'</span></div>'+
           '<div class="desc">'+(spot.desc||"")+'</div>'+
           tipsHtml;
+        var actionsRow = el("div","");
+        actionsRow.style.display = "flex";
+        actionsRow.style.flexWrap = "wrap";
+        actionsRow.style.gap = "8px";
+        actionsRow.style.marginTop = "9px";
+        var btn = el("button","mini-btn" + (candidateSelected?" selected":""), candidateSelected ? "候補に追加済み" : "候補に入れる");
+        btn.addEventListener("click", function(){
+          if(state.dateCandidates.indexOf(spot.name)===-1){
+            state.dateCandidates.push(spot.name);
+            toast("候補に追加しました。オーダーシートで確認できます。");
+          }else{
+            state.dateCandidates = state.dateCandidates.filter(function(n){ return n!==spot.name; });
+          }
+          saveState();
+          render();
+        });
+        actionsRow.appendChild(btn);
+        var mapQuery = encodeURIComponent([spot.name, spot.area].filter(Boolean).join(" "));
+        var mapLink = el("a","mini-btn","📍 地図で見る");
+        mapLink.href = "https://www.google.com/maps/search/?api=1&query=" + mapQuery;
+        mapLink.target = "_blank";
+        mapLink.rel = "noopener noreferrer";
+        mapLink.style.textDecoration = "none";
+        mapLink.style.display = "inline-flex";
+        mapLink.style.alignItems = "center";
+        actionsRow.appendChild(mapLink);
+        body.appendChild(actionsRow);
         card.appendChild(body);
         rWrap.appendChild(card);
       });
@@ -2413,7 +2476,7 @@
         pushFashion({ type:"fashion-detail", html:html, rawText: state.fashionLastDetailText });
       }else{
         console.error("fashion analysis failed:", res.status, data.error);
-        pushFashion({ type:"ai", text:"写真の分析に失敗しました。\n\n【エラー詳細（デバッグ用）】\n"+(data.error || ("status: "+res.status)) });
+        pushFashion({ type:"ai", text:"写真の分析に失敗しました。時間をおいて再度お試しください。" });
       }
     }catch(e){
       state.fashionChat.log = state.fashionChat.log.filter(function(x){ return x.type!=="typing"; });
@@ -2476,7 +2539,7 @@
     state.restaurantChat = { started:false, log:[] };
     state.restaurant = {
       step:null, category:null, mealtime:null,
-      location:null, budgetLabel:null, budgetNote:null, extraNote:null
+      location:null, cuisine:null, budgetLabel:null, budgetNote:null, extraNote:null
     };
     saveState();
   }
@@ -2518,7 +2581,7 @@
   }
 
   function proceedToRestaurantLocationStep(){
-    pushRestaurantLog({ type:"ai", text:"ありがとうございます！エリアを教えてください（駅名・エリア名・路線名など、わかる範囲でOKです）。下の入力欄からどうぞ。" });
+    pushRestaurantLog({ type:"ai", text:"ありがとうございます！エリアを教えてください（駅名・エリア名・路線名など、わかる範囲でOKです）。料理のジャンルも決まっていれば一緒にどうぞ（例：新宿のタイ料理）。下の入力欄からどうぞ。" });
     pushRestaurantLog({ type:"restaurant-location-prompt" });
     state.restaurant.step = "location";
     saveState();
@@ -2530,8 +2593,39 @@
   function onPickRestaurantLocation(location){
     pushRestaurantLog({ type:"user", text: location });
     state.restaurant.location = location;
+    state.restaurant.cuisine = null;
     saveState();
     proceedToRestaurantBudgetStep();
+  }
+
+  // 🔧 差し替えポイント：国名・料理ジャンルのキーワード。「川越 韓国」のように地名＋国名が
+  // 一緒に入力された場合、国名側を自動的に「〇〇料理」という料理ジャンルとして解釈する。
+  // 長い語を優先してマッチさせるため、キーは長さの降順で走査する（例："タイ料理"を"タイ"より先に判定）。
+  var CUISINE_KEYWORDS = {
+    "韓国料理":"韓国料理", "中華料理":"中華料理", "タイ料理":"タイ料理", "インド料理":"インド料理",
+    "インドネシア":"インドネシア料理", "シンガポール":"シンガポール料理", "フィリピン":"フィリピン料理",
+    "ネパール":"ネパール料理", "ベトナム":"ベトナム料理", "メキシコ":"メキシコ料理", "モロッコ":"モロッコ料理",
+    "レバノン":"レバノン料理", "ロシア":"ロシア料理", "ドイツ":"ドイツ料理", "スペイン":"スペイン料理",
+    "トルコ":"トルコ料理", "ギリシャ":"ギリシャ料理", "ブラジル":"ブラジル料理", "アメリカ":"アメリカ料理",
+    "ハワイ":"ハワイアン", "台湾":"台湾料理", "韓国":"韓国料理", "中国":"中華料理", "中華":"中華料理",
+    "タイ":"タイ料理", "インド":"インド料理", "イタリア":"イタリアン", "イタリアン":"イタリアン",
+    "フランス":"フレンチ", "フレンチ":"フレンチ", "エスニック":"エスニック料理",
+    "焼肉":"焼肉", "寿司":"寿司", "ラーメン":"ラーメン", "和食":"和食"
+  };
+  var CUISINE_KEYWORD_KEYS = Object.keys(CUISINE_KEYWORDS).sort(function(a,b){ return b.length - a.length; });
+
+  // 入力文字列から「料理ジャンル（国名含む）」と「残りのエリア部分」を切り分ける。
+  // マッチしなければ null を返す（＝これまで通り全文をエリアとして扱う）。
+  function detectRestaurantCuisine(text){
+    for(var i=0;i<CUISINE_KEYWORD_KEYS.length;i++){
+      var key = CUISINE_KEYWORD_KEYS[i];
+      var idx = text.indexOf(key);
+      if(idx !== -1){
+        var rest = (text.slice(0,idx) + text.slice(idx+key.length)).replace(/[の・、,，]+/g," ").trim();
+        return { cuisine: CUISINE_KEYWORDS[key], area: rest };
+      }
+    }
+    return null;
   }
 
   // カテゴリ／ランチ・ディナーに応じたデフォルト予算（🔧 差し替えポイント：相場が変わったら調整）
@@ -2559,7 +2653,8 @@
 
   // 自由入力から予算の意図を軽く読み取る簡易パーサー（🔧 実運用では自然言語理解をAPI側に任せる想定）
   function parseRestaurantBudgetIntent(text){
-    var numMatch = text.match(/([0-9０-９,，]{3,6})\s*円/);
+    // 「円」を付けずに数字だけ（例：3000）で来た場合も、この予算ステップでは金額入力とみなす
+    var numMatch = text.match(/([0-9０-９,，]{3,6})\s*円?/);
     if(numMatch){
       var normalized = numMatch[1]
         .replace(/[０-９]/g, function(d){ return String.fromCharCode(d.charCodeAt(0)-0xFEE0); })
@@ -2571,13 +2666,133 @@
     return null;
   }
 
+  // 「こんにちは」「ありがとう」のような、レストラン検索とは無関係な挨拶・雑談を検出する。
+  // これをエリア名として受け取ってしまうと、ヒアリングが変な方向に進んでしまうため。
+  function looksLikeGreetingOrChitchat(text){
+    var t = text.trim();
+    return /^(こんにちは|こんばんは|おはよう(ございます)?|ありがとう(ございます)?|よろしく(お願いします)?|はじめまして|どうも|了解|わかりました|わかりません|わからない|なんでもいい|何でもいい|hello|hi+|hey|thanks?|thank\s*you|test|テスト)[!！。、\s]*$/i.test(t);
+  }
+
+  // 結果表示後などに再度入力された短い文が「別のエリア・料理ジャンルで探し直したい」という
+  // 意図なのか、それとも「もっと落ち着いた感じで」のような自由文の追加希望なのかを見分けるための
+  // 簡易ゲート。長文や、好み・要望を表す言い回しを含む場合は追加希望（ノート）として扱う。
+  function looksLikeShortLocationQuery(text){
+    if(text.length > 20) return false;
+    if(/[0-9０-９]/.test(text)) return false; // 金額（予算）の可能性が高いので除外
+    if(looksLikeGreetingOrChitchat(text)) return false;
+    if(/円|です|ます|ください|たい|ほしい|にして|の方|でも|なら|じゃない|ではない|好き|嫌い|苦手|感じ|雰囲気|希望|もっと|高め|安め|高く|安く|リーズナブル|贅沢|奮発|抑えめ/.test(text)) return false;
+    return true;
+  }
+
+  // エリア・料理ジャンルの入力として解釈できた場合は true を返し、その場で処理まで済ませる
+  // （メッセージ表示・状態更新・render/再検索）。解釈できなければ false を返し、呼び出し元で
+  // 従来通りの扱い（自由入力の追加希望など）にフォールバックできるようにする。
+  // isInitialAsk: true＝最初の「エリアを教えてください」への回答、false＝それ以外の場面
+  function tryInterpretRestaurantLocationInput(text, isInitialAsk){
+    if(!isInitialAsk && !looksLikeShortLocationQuery(text)) return false;
+
+    var detected = detectRestaurantCuisine(text);
+    if(detected && detected.area){
+      // 例：「川越 韓国」→ エリア「川越」＋料理ジャンル「韓国料理」と解釈して進める
+      state.restaurant.location = detected.area;
+      state.restaurant.cuisine = detected.cuisine;
+      saveState();
+      if(isInitialAsk){ proceedToRestaurantBudgetStep(); }
+      else{ state.restaurant.extraNote = null; saveState(); runRestaurantSearch(); }
+      return true;
+    }
+    if(detected && !detected.area){
+      // 料理ジャンルらしき語はあるが、エリアが読み取れない（例：「韓国」だけ）
+      pushRestaurantLog({ type:"ai", text:"場所が読み取れませんでした。場所と料理名を一緒に入れてください（例：新宿のタイ料理）。" });
+      render();
+      return true;
+    }
+
+    var tokens = text.split(/[\s、,，]+/).filter(Boolean);
+    if(tokens.length >= 2){
+      if(!isInitialAsk) return false; // 通常の自由文（追加の希望）である可能性が高いため判定しない
+      // 料理ジャンルが特定できないまま複数の語が入力された場合は、意図が読み取りにくいため確認する
+      pushRestaurantLog({ type:"ai", text:"うまく認識できませんでした。場所と料理名を入れてください（例：新宿のタイ料理）。" });
+      render();
+      return true;
+    }
+
+    // 単語1つでも、「こんにちは」等レストラン検索と無関係な挨拶・雑談はエリア名として扱わない
+    if(looksLikeGreetingOrChitchat(text)){
+      if(!isInitialAsk) return false; // 結果表示後なら、従来通り追加の希望として扱う
+      pushRestaurantLog({ type:"ai", text:"すみません、うまく聞き取れませんでした。エリア名を教えてください（例：新宿、渋谷など）。" });
+      render();
+      return true;
+    }
+
+    // それ以外の単語1つ（駅名・エリア名など）は、エリアとして扱う
+    state.restaurant.location = text;
+    state.restaurant.cuisine = null;
+    saveState();
+    if(isInitialAsk){ proceedToRestaurantBudgetStep(); }
+    else{ state.restaurant.extraNote = null; saveState(); runRestaurantSearch(); }
+    return true;
+  }
+
+  // 「新大久保」「韓国料理」だけのような、エリア・料理ジャンルらしき一言が
+  // カテゴリ／ランチ・ディナーを決める前に来た場合、律儀に一つずつ聞き返すのではなく、
+  // 足りない条件（カテゴリ＝レストラン、ランチ/ディナー＝ディナー、予算＝既定値）を
+  // こちらで補って即座におすすめを提案する。判断できなければ false を返す。
+  function tryQuickRestaurantSearch(text){
+    var detected = detectRestaurantCuisine(text);
+    var location, cuisine;
+    if(detected){
+      // 「韓国料理」のように料理ジャンルだけでエリアが読み取れなくても、
+      // エリア指定なしのまま検索を続行する（Gemini側で「指定なし」として扱われる）
+      location = detected.area || null;
+      cuisine = detected.cuisine;
+    }else{
+      var tokens = text.split(/[\s、,，]+/).filter(Boolean);
+      if(tokens.length !== 1) return false;
+      if(!looksLikeShortLocationQuery(text)) return false; // 挨拶・要望・金額らしき文は対象外
+      location = text;
+      cuisine = null;
+    }
+
+    state.restaurant.location = location;
+    state.restaurant.cuisine = cuisine;
+    var categoryDefaulted = false, mealtimeDefaulted = false;
+    if(!state.restaurant.category){ state.restaurant.category = "restaurant"; categoryDefaulted = true; }
+    if(state.restaurant.category === "restaurant" && !state.restaurant.mealtime){ state.restaurant.mealtime = "dinner"; mealtimeDefaulted = true; }
+    if(!state.restaurant.budgetLabel){ state.restaurant.budgetLabel = defaultRestaurantBudgetLabel(); }
+    saveState();
+
+    var introText = mealtimeDefaulted
+      ? "ディナー想定で、おすすめのお店はこちらです！ランチをご希望でしたら教えてください。"
+      : (categoryDefaulted ? "レストランでおすすめのお店を探しました！カフェをご希望でしたら教えてください。" : null);
+    runRestaurantSearch(introText);
+    return true;
+  }
+
   function submitRestaurantFreeText(text){
     pushRestaurantLog({ type:"user", text: text });
     var step = state.restaurant.step;
+    // category/mealtime がまだ決まっていない段階で自由入力があった場合、
+    // これを無条件にエリア扱いして検索へ進めてしまうと、category未指定のままAPIを呼んでしまい
+    // （必ず失敗してデモ表示になる）事故のもとになる。ここでしっかり吸収する。
+    if(step === "category"){
+      if(/カフェ/.test(text)){ onPickRestaurantCategory("cafe"); return; }
+      if(/レストラン/.test(text)){ onPickRestaurantCategory("restaurant"); return; }
+      if(tryQuickRestaurantSearch(text)) return;
+      pushRestaurantLog({ type:"ai", text:"レストランかカフェ、どちらのイメージか上のボタンからお選びください。" });
+      render();
+      return;
+    }
+    if(step === "mealtime"){
+      if(/ランチ|昼/.test(text)){ onPickRestaurantMealtime("lunch"); return; }
+      if(/ディナー|夜/.test(text)){ onPickRestaurantMealtime("dinner"); return; }
+      if(tryQuickRestaurantSearch(text)) return;
+      pushRestaurantLog({ type:"ai", text:"ランチかディナー、どちらの想定か上のボタンからお選びください。" });
+      render();
+      return;
+    }
     if(step === "location"){
-      state.restaurant.location = text;
-      saveState();
-      proceedToRestaurantBudgetStep();
+      tryInterpretRestaurantLocationInput(text, true);
       return;
     }
     if(step === "budget"){
@@ -2593,7 +2808,10 @@
       runRestaurantSearch();
       return;
     }
-    // 結果表示後の追加相談（雰囲気の希望など）は、条件に追記して再検索する
+    // ここに到達するのは基本的に step === "done"（検索結果が出た後）の場合のみ。
+    // まず「別のエリア・料理ジャンルで探し直したい」という意図かどうかを確認し、
+    // そうでなければ従来通り、追加の希望（雰囲気の希望など）として条件に追記して再検索する。
+    if(tryInterpretRestaurantLocationInput(text, false)) return;
     state.restaurant.extraNote = text;
     saveState();
     runRestaurantSearch();
@@ -2615,18 +2833,20 @@
         headers:{ "Content-Type":"application/json" },
         body: JSON.stringify(params)
       });
-      if(res.ok){
-        var data = await res.json();
-        if(data && Array.isArray(data.spots)){
-          return { spots:data.spots, grounded: !!data.grounded, mock:false };
-        }
+      var data = await res.json().catch(function(){ return null; });
+      if(res.ok && data && Array.isArray(data.spots)){
+        return { spots:data.spots, grounded: !!data.grounded, mock:false };
       }
-    }catch(e){ /* 通信エラー時は下のモックにフォールバック */ }
+      // モックへフォールバックする前に、原因をコンソールへ残す（画面には出さない）
+      console.error("restaurant-recommend failed:", res.status, data && (data.error || data.detail));
+    }catch(e){
+      console.error("restaurant-recommend network error:", e);
+    }
     await sleep(900);
     return { spots: MOCK_RESTAURANT_SPOTS, grounded:false, mock:true };
   }
 
-  async function runRestaurantSearch(){
+  async function runRestaurantSearch(introText){
     pushRestaurantLog({ type:"typing" });
     render();
     var r = state.restaurant;
@@ -2635,13 +2855,14 @@
       category: r.category,
       mealtime: r.mealtime,
       location: r.location,
+      cuisine: r.cuisine,
       budgetLabel: r.budgetLabel,
       budgetNote: r.budgetNote,
       extraNote: r.extraNote
     });
     state.restaurantChat.log = state.restaurantChat.log.filter(function(x){ return x.type!=="typing"; });
-    pushRestaurantLog({ type:"ai", text:"こちらのお店はいかがでしょう？デート視点のポイントも添えています。" });
-    pushRestaurantLog({ type:"restaurant-result", spots:result.spots, grounded:result.grounded });
+    pushRestaurantLog({ type:"ai", text: introText || "こちらのお店はいかがでしょう？デート視点のポイントも添えています。" });
+    pushRestaurantLog({ type:"restaurant-result", spots:result.spots, grounded:result.grounded, mock:result.mock });
     state.restaurant.step = "done";
     bellHasNote = true;
     saveState();
@@ -2655,6 +2876,29 @@
     var closeBtn = el("button","close-link","← 閉じる");
     closeBtn.addEventListener("click", function(){ state.tab = "hair"; render(); });
     screen.appendChild(closeBtn);
+
+    if(state.dateCandidates && state.dateCandidates.length){
+      screen.appendChild(el("div","section-label","検討中のデートのお店"));
+      var candWrap = el("div","full-card");
+      candWrap.style.padding = "12px 14px";
+      state.dateCandidates.forEach(function(name){
+        var row = el("div","");
+        row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);";
+        var label = el("span","",name);
+        label.style.fontSize = "13.5px";
+        row.appendChild(label);
+        var removeBtn = el("button","mini-btn","候補から外す");
+        removeBtn.addEventListener("click", function(){
+          state.dateCandidates = state.dateCandidates.filter(function(n){ return n!==name; });
+          saveState();
+          render();
+        });
+        row.appendChild(removeBtn);
+        candWrap.appendChild(row);
+      });
+      candWrap.lastChild.style.borderBottom = "none";
+      screen.appendChild(candWrap);
+    }
 
     if(!state.selectedStyle){
       screen.appendChild(emptyState("髪型が未選択です。「ヘア」タブでスタイルを決めると、ここにオーダーシートが作成されます。", ICONS.order, "髪型を選びに行く", function(){ state.tab="hair"; render(); }));
