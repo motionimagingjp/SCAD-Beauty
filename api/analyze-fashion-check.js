@@ -83,7 +83,9 @@ ${personalColor ? `- このユーザーのパーソナルカラーは「${person
 `.trim();
 
   try {
-    const model = "gemini-2.5-flash";
+    // gemini-flash-latest は常に「その時点で推奨されるFlashモデル」を指すエイリアス。
+    // 個別バージョン名を指定するとモデル廃止時に404エラーになるため、他のAPIファイルと合わせて使用する。
+    const model = "gemini-flash-latest";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
