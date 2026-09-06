@@ -889,7 +889,6 @@
       userSelfiePhoto:null, // 「自分に似合うか試す」用の自撮り写真（この端末内のみ保持）
       pendingCompositeStyle:null, // 自撮りアップロード待ちの間、どの髪型で試そうとしていたかを一時保持
       outfit:null,
-      dateCandidates:[], // レストランタブの「候補に入れる」で貯まる店名（オーダーシートに表示）
       seenFashionBadge:false,
       seenRestaurantBadge:false,
       seenOrderBadge:false,
@@ -1767,7 +1766,6 @@
         swatch.innerHTML = ICONS.restaurant;
         card.appendChild(swatch);
         var body = el("div","body");
-        var candidateSelected = state.dateCandidates.indexOf(spot.name) !== -1;
         var tipsHtml = (spot.dateTips||[]).map(function(t){ return '<div class="tag" style="display:block;margin-top:4px;">💡 '+t+'</div>'; }).join('');
         body.innerHTML =
           '<div class="title-row"><span class="title">'+spot.name+'</span><span style="font-size:11px;color:var(--ink-faint);">'+(spot.area||"")+'</span></div>'+
@@ -1778,18 +1776,6 @@
         actionsRow.style.flexWrap = "wrap";
         actionsRow.style.gap = "8px";
         actionsRow.style.marginTop = "9px";
-        var btn = el("button","mini-btn" + (candidateSelected?" selected":""), candidateSelected ? "候補に追加済み" : "候補に入れる");
-        btn.addEventListener("click", function(){
-          if(state.dateCandidates.indexOf(spot.name)===-1){
-            state.dateCandidates.push(spot.name);
-            toast("候補に追加しました。オーダーシートで確認できます。");
-          }else{
-            state.dateCandidates = state.dateCandidates.filter(function(n){ return n!==spot.name; });
-          }
-          saveState();
-          render();
-        });
-        actionsRow.appendChild(btn);
         var mapQuery = encodeURIComponent([spot.name, spot.area].filter(Boolean).join(" "));
         var mapLink = el("a","mini-btn","📍 地図で見る");
         mapLink.href = "https://www.google.com/maps/search/?api=1&query=" + mapQuery;
@@ -2877,29 +2863,6 @@
     var closeBtn = el("button","close-link","← 閉じる");
     closeBtn.addEventListener("click", function(){ state.tab = "hair"; render(); });
     screen.appendChild(closeBtn);
-
-    if(state.dateCandidates && state.dateCandidates.length){
-      screen.appendChild(el("div","section-label","検討中のデートのお店"));
-      var candWrap = el("div","full-card");
-      candWrap.style.padding = "12px 14px";
-      state.dateCandidates.forEach(function(name){
-        var row = el("div","");
-        row.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);";
-        var label = el("span","",name);
-        label.style.fontSize = "13.5px";
-        row.appendChild(label);
-        var removeBtn = el("button","mini-btn","候補から外す");
-        removeBtn.addEventListener("click", function(){
-          state.dateCandidates = state.dateCandidates.filter(function(n){ return n!==name; });
-          saveState();
-          render();
-        });
-        row.appendChild(removeBtn);
-        candWrap.appendChild(row);
-      });
-      candWrap.lastChild.style.borderBottom = "none";
-      screen.appendChild(candWrap);
-    }
 
     if(!state.selectedStyle){
       screen.appendChild(emptyState("髪型が未選択です。「ヘア」タブでスタイルを決めると、ここにオーダーシートが作成されます。", ICONS.order, "髪型を選びに行く", function(){ state.tab="hair"; render(); }));
