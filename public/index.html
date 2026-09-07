@@ -1012,6 +1012,21 @@
       toast(fallbackCopyText(text) ? "コピーしました" : "コピーできませんでした。手動で選択してコピーしてください");
     }
   }
+  // 1件の結果（ヘアスタイル・コーデ・お店）をLINE等にシェアする共通処理。
+  // navigator.share対応環境（スマホブラウザ全般）ではOSの共有シートを開き、
+  // 非対応（主にPCブラウザ）の場合はテキストをコピーしてトーストで案内する。
+  var APP_SHARE_URL = "https://scad-beauty.vercel.app/";
+  function shareResult(title, text){
+    var fullText = text + "\n\n" + APP_SHARE_URL;
+    if(navigator.share){
+      navigator.share({ title:title, text:fullText }).catch(function(e){
+        if(e && e.name === "AbortError") return; // ユーザーがキャンセルした場合は何もしない
+        copyText(fullText);
+      });
+    }else{
+      copyText(fullText);
+    }
+  }
   // コピー＋外部の生成AIサービスを新規タブで開く（クリップボードAPIが使えない環境向けのフォールバック付き）
   async function copyAndOpen(text, url, serviceName){
     var copied = false;
@@ -1547,6 +1562,11 @@
       var b2 = el("button","chip primary","自分に似合うか試す（ヘアマッチング）");
       b2.addEventListener("click", function(){ onTryHairComposite(style); });
       actions.appendChild(b2);
+      var shareBtn = el("button","chip","📤 シェア");
+      shareBtn.addEventListener("click", function(){
+        shareResult("スクアド ヘアスタイル", "「"+style.name+"」を見つけました！\n"+style.sub);
+      });
+      actions.appendChild(shareBtn);
       confirmWrap.appendChild(actions);
       return confirmWrap;
     }
@@ -1687,6 +1707,9 @@
       var dcopyBtn = el("button","mini-btn selected","📋 コピー");
       dcopyBtn.addEventListener("click", function(){ copyFashionText(entry.rawText); });
       dbtnRow.appendChild(dcopyBtn);
+      var dshareBtn = el("button","mini-btn","📤 シェア");
+      dshareBtn.addEventListener("click", function(){ shareResult("スクアド ファッション", entry.rawText); });
+      dbtnRow.appendChild(dshareBtn);
       var restartBtn = el("button","mini-btn","🔁 別の相談をする");
       restartBtn.addEventListener("click", function(){
         resetFashionFlow();
@@ -1785,6 +1808,11 @@
         mapLink.style.display = "inline-flex";
         mapLink.style.alignItems = "center";
         actionsRow.appendChild(mapLink);
+        var spotShareBtn = el("button","mini-btn","📤 シェア");
+        spotShareBtn.addEventListener("click", function(){
+          shareResult("スクアド レストラン", spot.name+"（"+(spot.area||"")+"）\n"+(spot.desc||""));
+        });
+        actionsRow.appendChild(spotShareBtn);
         body.appendChild(actionsRow);
         card.appendChild(body);
         rWrap.appendChild(card);
