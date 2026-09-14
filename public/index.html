@@ -778,6 +778,48 @@
 
 <script>
 (function(){
+  /* ---------------------------------------------------------
+     会社共有用デモ版(MIRAI-Dev-Beauty)との切り替え。
+     このアプリはビルド工程を持たない静的HTMLのため、環境変数ではなく
+     ホスト名で判定する。デモ用Vercelプロジェクトのドメインを
+     mirai-dev-* にしておけば、同じファイルのまま両方で動く。
+
+     デモ版の方針:
+       - 個人アカウントに繋がる外部リンクは張らない(アイコンは表示のみ)
+       - 姉妹アプリ導線はデモ版同士で閉じ、本番サイトへ着地させない
+  --------------------------------------------------------- */
+  var IS_DEMO = /^mirai-dev/.test(location.hostname);
+  var BRAND = IS_DEMO
+    ? {
+        appName: "MIRAI-Dev-Beauty",
+        shareUrl: "https://mirai-dev-beauty.vercel.app/",
+        chatUrl: "https://mirai-dev-chat.vercel.app/",
+        chatLabel: "MIRAI-Dev-Chat",
+        selfLabel: "MIRAI-Dev-Beauty（このアプリ）",
+        // url が null のSNSはリンクを張らず、アイコンの見た目だけ残す
+        sns: [
+          { label: "Instagram", icon: "instagram", url: null },
+          { label: "X",         icon: "x",         url: null }
+        ]
+      }
+    : {
+        appName: "スクアド",
+        shareUrl: "https://scad-beauty.vercel.app/",
+        chatUrl: "https://scad-chat.vercel.app/",
+        chatLabel: "SCAD CHAT",
+        selfLabel: "SCAD BEAUTY（このアプリ）",
+        sns: [
+          { label: "Instagram", icon: "instagram", url: "https://instagram.com/" },
+          { label: "X",         icon: "x",         url: "https://x.com/" }
+        ]
+      };
+
+  if (IS_DEMO) {
+    document.title = BRAND.appName;
+    var appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (appleTitle) appleTitle.setAttribute("content", BRAND.appName);
+  }
+
   "use strict";
 
   /* =========================================================
@@ -1015,7 +1057,7 @@
   // 1件の結果（ヘアスタイル・コーデ・お店）をLINE等にシェアする共通処理。
   // navigator.share対応環境（スマホブラウザ全般）ではOSの共有シートを開き、
   // 非対応（主にPCブラウザ）の場合はテキストをコピーしてトーストで案内する。
-  var APP_SHARE_URL = "https://scad-beauty.vercel.app/";
+  var APP_SHARE_URL = BRAND.shareUrl;
   function shareResult(title, text){
     var fullText = text + "\n\n" + APP_SHARE_URL;
     if(navigator.share){
@@ -3056,16 +3098,13 @@
     ],
     dataNote: "アップロードした写真は、診断のために外部のAIサービスへ一時的に送信されるのみで、当方のサーバーに保存されることはありません。診断結果やメモなどのデータも、すべてこの端末（ブラウザ）内にのみ保存され、外部に共有されることはありません。",
     seriesApps: [
-      { emoji:"💬", label:"恋活・婚活コミュニケーション", sub:"SCAD CHAT", kind:"external", url:"https://scad-chat.vercel.app/" },
-      { icon:"hair", label:"ヘアスタイル", sub:"SCAD BEAUTY（このアプリ）", kind:"tab", tab:"hair" },
-      { icon:"fashion", label:"ファッション", sub:"SCAD BEAUTY（このアプリ）", kind:"tab", tab:"fashion" },
+      { emoji:"💬", label:"恋活・婚活コミュニケーション", sub:BRAND.chatLabel, kind:"external", url:BRAND.chatUrl },
+      { icon:"hair", label:"ヘアスタイル", sub:BRAND.selfLabel, kind:"tab", tab:"hair" },
+      { icon:"fashion", label:"ファッション", sub:BRAND.selfLabel, kind:"tab", tab:"fashion" },
       { emoji:"🔜", label:"その他", sub:"現在開発中", kind:"soon" }
     ],
-    sns: [
-      // 🔧 差し替えポイント: 実際のSNSリンクに置き換えてください
-      { label:"Instagram", icon:"instagram", url:"https://instagram.com/" },
-      { label:"X",         icon:"x",         url:"https://x.com/" }
-    ]
+    // 🔧 差し替えポイント: 実際のSNSリンクに置き換える場合は BRAND 側を編集する
+    sns: BRAND.sns
   };
 
   // ヘッダーの「このアプリについて」アイコンを、汎用のiマークから開発者アバターに差し替える
@@ -3146,11 +3185,14 @@
     screen.appendChild(el("div","section-label","お問い合わせ・SNS"));
     var snsRow = el("div","sns-row");
     APP_ABOUT.sns.forEach(function(s){
-      var a = document.createElement("a");
+      // url が null のときはリンクを張らず、アイコンの見た目だけを残す
+      var a = document.createElement(s.url ? "a" : "span");
       a.className = "sns-btn";
-      a.href = s.url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
+      if(s.url){
+        a.href = s.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      }
       a.setAttribute("aria-label", s.label);
       a.innerHTML = ICONS[s.icon] || "";
       snsRow.appendChild(a);
