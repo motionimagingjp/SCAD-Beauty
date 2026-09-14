@@ -10,6 +10,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="スクアド">
 <meta name="theme-color" content="#a3415a">
+<!--
+  og:image / twitter:image はブランド名を含まない中立デザイン(public/ogp-image.png)。
+  この画面は静的HTML1枚のみでホスト名によるサーバー側の出し分けができないため、
+  本番(scad-beauty.vercel.app)・デモ(mirai-dev-beauty.vercel.app)の両方で共通して使う。
+  <title>やapple-mobile-web-app-titleは本番名のままだが、リンク共有時のプレビューには
+  影響しない(クローラーはmetaタグを見るため)。
+-->
+<meta property="og:type" content="website">
+<meta property="og:image" content="/ogp-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="/ogp-image.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
