@@ -294,23 +294,24 @@
     <h2 class="section-label">アプリ</h2>
     <div class="apps">
 
-      <article class="app" style="--tint:var(--chat)">
+      <article class="app" style="--tint:var(--solo)">
         <div class="app-head">
-          <h3 class="app-name">MIRAI-Dev-Chat</h3>
-          <span class="app-role">コミュニケーション相談</span>
+          <h3 class="app-name">MIRAI-Dev-Solo</h3>
+          <span class="app-role">ソロ飲みナビ</span>
           <span class="status">稼働中</span>
         </div>
         <p class="app-body">
-          やり取りのスクリーンショットを送ると、AIが状況を読み取って返信の
-          文面を提案します。文章の添削だけでなく、送る頻度やタイミングまで
-          含めて助言する設計です。タイプの異なる3人のアドバイザーを選べます。
+          一人で入りやすい店だけを集め、現在地から近い順に3軒を提案します。
+          位置情報は手動指定・GPS・IP推定・既定値の順にフォールバックし、
+          GPSを拒否しても使えます。チェックインの記録と、一人でも遊べる
+          ゲームを5種類用意しています。
         </p>
-        <a class="app-cta" href="https://mirai-dev-chat.vercel.app/">デモを開く <span class="arrow">→</span></a>
+        <a class="app-cta" href="https://mirai-dev-solo.vercel.app/">デモを開く <span class="arrow">→</span></a>
         <dl class="spec">
-          <dt>Stack</dt><dd>Next.js 14 (App Router)</dd>
-          <dt>AI</dt><dd>gemini-2.5-flash</dd>
-          <dt>特徴</dt><dd>人格3種をオブジェクト1個で管理し、追加は設定のみ</dd>
-          <dt>データ</dt><dd>入力内容はサーバーに保存しない</dd>
+          <dt>Stack</dt><dd>Next.js 14 + Prisma</dd>
+          <dt>DB</dt><dd>PostgreSQL (Neon / sin1)</dd>
+          <dt>API</dt><dd>Google Maps / Geocoding / Places</dd>
+          <dt>運用</dt><dd>Vercel Cron で月1回の閉店確認</dd>
         </dl>
       </article>
 
@@ -334,24 +335,23 @@
         </dl>
       </article>
 
-      <article class="app" style="--tint:var(--solo)">
+      <article class="app" style="--tint:var(--chat)">
         <div class="app-head">
-          <h3 class="app-name">MIRAI-Dev-Solo</h3>
-          <span class="app-role">ソロ飲みナビ</span>
+          <h3 class="app-name">MIRAI-Dev-Chat</h3>
+          <span class="app-role">コミュニケーション相談</span>
           <span class="status">稼働中</span>
         </div>
         <p class="app-body">
-          一人で入りやすい店だけを集め、現在地から近い順に3軒を提案します。
-          位置情報は手動指定・GPS・IP推定・既定値の順にフォールバックし、
-          GPSを拒否しても使えます。チェックインの記録と、一人でも遊べる
-          ゲームを5種類用意しています。
+          やり取りのスクリーンショットを送ると、AIが状況を読み取って返信の
+          文面を提案します。文章の添削だけでなく、送る頻度やタイミングまで
+          含めて助言する設計です。タイプの異なる3人のアドバイザーを選べます。
         </p>
-        <a class="app-cta" href="https://mirai-dev-solo.vercel.app/">デモを開く <span class="arrow">→</span></a>
+        <a class="app-cta" href="https://mirai-dev-chat.vercel.app/">デモを開く <span class="arrow">→</span></a>
         <dl class="spec">
-          <dt>Stack</dt><dd>Next.js 14 + Prisma</dd>
-          <dt>DB</dt><dd>PostgreSQL (Neon / sin1)</dd>
-          <dt>API</dt><dd>Google Maps / Geocoding / Places</dd>
-          <dt>運用</dt><dd>Vercel Cron で月1回の閉店確認</dd>
+          <dt>Stack</dt><dd>Next.js 14 (App Router)</dd>
+          <dt>AI</dt><dd>gemini-2.5-flash</dd>
+          <dt>特徴</dt><dd>人格3種をオブジェクト1個で管理し、追加は設定のみ</dd>
+          <dt>データ</dt><dd>入力内容はサーバーに保存しない</dd>
         </dl>
       </article>
 
