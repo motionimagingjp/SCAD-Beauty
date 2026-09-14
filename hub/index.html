@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIRAI-Dev-Apps</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="個人開発中のWebアプリ3本のデモ環境">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#f4f5f7;
+    --surface:#ffffff;
+    --ink:#15181e;
+    --ink-soft:#59606d;
+    --ink-faint:#8b929e;
+    --line:#e2e5ea;
+    --line-soft:#eceef2;
+    --accent:#3c4f76;
+    --accent-ink:#ffffff;
+    --chat:#a8790a;
+    --beauty:#a3415a;
+    --solo:#cf5c09;
+    --shadow:0 1px 2px rgba(21,24,30,.05), 0 8px 24px -12px rgba(21,24,30,.18);
+
+    --display:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    --body:"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#101318;
+      --surface:#171b22;
+      --ink:#eceef2;
+      --ink-soft:#a1a8b5;
+      --ink-faint:#727a87;
+      --line:#272d37;
+      --line-soft:#1e232b;
+      --accent:#93a9d8;
+      --accent-ink:#101318;
+      --chat:#d9a92f;
+      --beauty:#d4788f;
+      --solo:#f0954e;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#101318;
+    --surface:#171b22;
+    --ink:#eceef2;
+    --ink-soft:#a1a8b5;
+    --ink-faint:#727a87;
+    --line:#272d37;
+    --line-soft:#1e232b;
+    --accent:#93a9d8;
+    --accent-ink:#101318;
+    --chat:#d9a92f;
+    --beauty:#d4788f;
+    --solo:#f0954e;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:15px;
+    line-height:1.85;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:880px;
+    margin:0 auto;
+    padding-inline:20px;
+    padding-block:56px 72px;
+    display:flex;
+    flex-direction:column;
+    gap:56px;
+  }
+  a{color:inherit}
+  :where(a,button):focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+  /* ---- ヘッダー ---- */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:0 0 14px;
+  }
+  h1{
+    font-family:var(--display);
+    font-weight:900;
+    font-size:clamp(30px,6vw,44px);
+    line-height:1.18;
+    letter-spacing:-.01em;
+    margin:0;
+    text-wrap:balance;
+  }
+  .lead{
+    margin:16px 0 0;
+    max-width:60ch;
+    color:var(--ink-soft);
+  }
+  .facts{
+    list-style:none;
+    margin:26px 0 0;
+    padding:0;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 26px;
+    border-top:1px solid var(--line);
+    padding-top:18px;
+  }
+  .facts div{display:flex;flex-direction:column;gap:1px}
+  .facts dt{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .facts dd{margin:0;font-weight:500;font-size:14px}
+
+  /* ---- セクション見出し ---- */
+  .section-label{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:0 0 20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .section-label::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  /* ---- アプリ ---- */
+  .apps{display:flex;flex-direction:column;gap:18px}
+  .app{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-left:3px solid var(--tint);
+    border-radius:3px;
+    box-shadow:var(--shadow);
+    padding:24px 24px 22px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 232px;
+    gap:8px 32px;
+    align-items:start;
+  }
+  .app-head{grid-column:1;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px}
+  .app-name{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:.005em;
+    margin:0;
+    color:var(--tint);
+  }
+  .app-role{font-size:13px;color:var(--ink-soft)}
+  .status{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.06em;
+    padding:2px 8px;
+    border:1px solid var(--tint);
+    border-radius:999px;
+    color:var(--tint);
+    white-space:nowrap;
+  }
+  .app-body{grid-column:1;margin:8px 0 0;color:var(--ink-soft);max-width:52ch}
+  .app-cta{
+    grid-column:1;
+    justify-self:start;
+    margin-top:18px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 18px;
+    border-radius:2px;
+    background:var(--tint);
+    color:var(--surface);
+    font-family:var(--display);
+    font-weight:700;
+    font-size:13.5px;
+    text-decoration:none;
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  .app-cta:hover{opacity:.88;transform:translateY(-1px)}
+  .app-cta .arrow{font-family:var(--mono);font-weight:400}
+
+  .spec{
+    grid-column:2;
+    grid-row:1 / span 4;
+    margin:0;
+    padding:14px 0 0;
+    border-top:1px solid var(--line-soft);
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    gap:7px 12px;
+    font-size:12px;
+  }
+  .spec dt{
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    padding-top:2px;
+    white-space:nowrap;
+  }
+  .spec dd{
+    margin:0;
+    font-family:var(--mono);
+    font-size:11.5px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    overflow-wrap:anywhere;
+  }
+
+  /* ---- 開発の進め方 ---- */
+  .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:26px 34px}
+  .note h3{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:14.5px;
+    margin:0 0 6px;
+  }
+  .note p{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.8}
+
+  /* ---- フッター ---- */
+  footer{
+    border-top:1px solid var(--line);
+    padding-top:22px;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    line-height:1.9;
+  }
+  footer strong{color:var(--ink-soft);font-weight:500}
+
+  @media (max-width:720px){
+    .wrap{padding-block:40px 56px;gap:44px}
+    .app{grid-template-columns:minmax(0,1fr);padding:20px 18px}
+    .spec{grid-column:1;grid-row:auto;border-top:1px solid var(--line-soft);margin-top:18px}
+    .app-cta{margin-top:18px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">社内共有用デモ環境</p>
+    <h1>MIRAI-Dev-Apps</h1>
+    <p class="lead">
+      業務外に個人で開発しているWebアプリ3本のデモ環境です。生成AIを使った
+      「写真・スクリーンショットを送るだけ」の体験を軸に、企画・設計・実装・
+      運用まで一人で回しています。各アプリはそのまま触って動かせます。
+    </p>
+    <dl class="facts">
+      <div><dt>アプリ</dt><dd>3本（全て稼働中）</dd></div>
+      <div><dt>構成</dt><dd>Next.js / Vercel / Gemini</dd></div>
+      <div><dt>体制</dt><dd>企画・実装とも個人</dd></div>
+      <div><dt>デプロイ</dt><dd>GitHub 連携で自動</dd></div>
+    </dl>
+  </header>
+
+  <section>
+    <h2 class="section-label">アプリ</h2>
+    <div class="apps">
+
+      <article class="app" style="--tint:var(--chat)">
+        <div class="app-head">
+          <h3 class="app-name">MIRAI-Dev-Chat</h3>
+          <span class="app-role">コミュニケーション相談</span>
+          <span class="status">稼働中</span>
+        </div>
+        <p class="app-body">
+          やり取りのスクリーンショットを送ると、AIが状況を読み取って返信の
+          文面を提案します。文章の添削だけでなく、送る頻度やタイミングまで
+          含めて助言する設計です。タイプの異なる3人のアドバイザーを選べます。
+        </p>
+        <a class="app-cta" href="https://mirai-dev-chat.vercel.app/">デモを開く <span class="arrow">→</span></a>
+        <dl class="spec">
+          <dt>Stack</dt><dd>Next.js 14 (App Router)</dd>
+          <dt>AI</dt><dd>gemini-2.5-flash</dd>
+          <dt>特徴</dt><dd>人格3種をオブジェクト1個で管理し、追加は設定のみ</dd>
+          <dt>データ</dt><dd>入力内容はサーバーに保存しない</dd>
+        </dl>
+      </article>
+
+      <article class="app" style="--tint:var(--beauty)">
+        <div class="app-head">
+          <h3 class="app-name">MIRAI-Dev-Beauty</h3>
+          <span class="app-role">ヘア・ファッション診断</span>
+          <span class="status">稼働中</span>
+        </div>
+        <p class="app-body">
+          写真をアップロードすると、顔型に似合う髪型、コーディネートの
+          チェック、デート向けの店の提案までをAIが返します。美容師や
+          スタイリストに相談する前の「予習」として使う想定です。
+        </p>
+        <a class="app-cta" href="https://mirai-dev-beauty.vercel.app/">デモを開く <span class="arrow">→</span></a>
+        <dl class="spec">
+          <dt>Stack</dt><dd>静的HTML + Vercel Functions</dd>
+          <dt>API</dt><dd>診断用エンドポイント5本</dd>
+          <dt>特徴</dt><dd>APIキーはサーバー側のみ。未接続時はモックへ自動切替</dd>
+          <dt>画像</dt><dd>診断のため一時送信のみ・保存なし</dd>
+        </dl>
+      </article>
+
+      <article class="app" style="--tint:var(--solo)">
+        <div class="app-head">
+          <h3 class="app-name">MIRAI-Dev-Solo</h3>
+          <span class="app-role">ソロ飲みナビ</span>
+          <span class="status">稼働中</span>
+        </div>
+        <p class="app-body">
+          一人で入りやすい店だけを集め、現在地から近い順に3軒を提案します。
+          位置情報は手動指定・GPS・IP推定・既定値の順にフォールバックし、
+          GPSを拒否しても使えます。チェックインの記録と、一人でも遊べる
+          ゲームを5種類用意しています。
+        </p>
+        <a class="app-cta" href="https://mirai-dev-solo.vercel.app/">デモを開く <span class="arrow">→</span></a>
+        <dl class="spec">
+          <dt>Stack</dt><dd>Next.js 14 + Prisma</dd>
+          <dt>DB</dt><dd>PostgreSQL (Neon / sin1)</dd>
+          <dt>API</dt><dd>Google Maps / Geocoding / Places</dd>
+          <dt>運用</dt><dd>Vercel Cron で月1回の閉店確認</dd>
+        </dl>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-label">開発の進め方</h2>
+    <div class="notes">
+      <div class="note">
+        <h3>生成AIには素材だけ作らせる</h3>
+        <p>
+          文字数や書式のようにルールが決まっているものはAIに任せず、コード側で
+          確定させています。AIの出力はJSONに限定し、組み立ては自前で行うことで、
+          文面の崩れや文字数超過を構造的に防いでいます。
+        </p>
+      </div>
+      <div class="note">
+        <h3>AIの間違いを前提に検証する</h3>
+        <p>
+          AIに店舗を収集させると、実在しない店や誤った住所が一定の割合で混ざります。
+          そのため候補は必ず人力で実在確認し、未確認のものは「AI提案」と明示した
+          まま出す運用にしています。
+        </p>
+      </div>
+      <div class="note">
+        <h3>失敗を資産として持ち越す</h3>
+        <p>
+          サーバーレスでの非同期処理の落とし穴、AIモデル廃止への対処といった
+          過去の失敗を、症状・原因・対策の形でリポジトリに蓄積し、次のアプリの
+          実装時に参照しています。
+        </p>
+      </div>
+      <div class="note">
+        <h3>同じ型を横展開する</h3>
+        <p>
+          「このアプリについて」の画面構成や、自動投稿の共通ロジックなど、
+          一度固めた型はそのままテンプレートとして次のアプリへ流用しています。
+          3本目の立ち上げは1本目より大幅に短い期間で済みました。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <strong>この環境について。</strong>
+    本番環境とは別に用意した、社内共有用のデモ環境です。運営者個人のSNSアカウント等への
+    リンクは含まれず、検索エンジンにも登録されません。アプリ名は本番のものとは異なります。
+  </footer>
+
+</div>
+</body>
+</html>
