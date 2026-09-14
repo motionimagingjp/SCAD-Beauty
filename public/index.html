@@ -796,6 +796,7 @@
         chatUrl: "https://mirai-dev-chat.vercel.app/",
         chatLabel: "MIRAI-Dev-Chat",
         selfLabel: "MIRAI-Dev-Beauty（このアプリ）",
+        seriesLabel: "MIRAI-Dev-Appsシリーズ",
         // url が null のSNSはリンクを張らず、アイコンの見た目だけ残す
         sns: [
           { label: "Instagram", icon: "instagram", url: null },
@@ -808,6 +809,7 @@
         chatUrl: "https://scad-chat.vercel.app/",
         chatLabel: "SCAD CHAT",
         selfLabel: "SCAD BEAUTY（このアプリ）",
+        seriesLabel: "SCADシリーズ",
         sns: [
           { label: "Instagram", icon: "instagram", url: "https://instagram.com/" },
           { label: "X",         icon: "x",         url: "https://x.com/" }
@@ -3154,7 +3156,7 @@
     screen.appendChild(el("div","advice-box", APP_ABOUT.dataNote));
 
     // ---- ④SCADシリーズ（関連アプリ）----
-    screen.appendChild(el("div","section-label","SCADシリーズ"));
+    screen.appendChild(el("div","section-label",BRAND.seriesLabel));
     var seriesList = el("div","series-list");
     APP_ABOUT.seriesApps.forEach(function(app){
       var isSoon = app.kind === "soon";
