@@ -715,12 +715,84 @@
     .page-title, .page-eyebrow{display:none;}
     .notch{display:none;}
   }
+
+  /* ---- PWA「ホーム画面に追加」促しバナー ---- */
+  .pwa-install-prompt{
+    position:fixed;
+    left:12px; right:12px;
+    bottom:calc(78px + env(safe-area-inset-bottom,0px));
+    z-index:200;
+    max-width:420px;
+    margin:0 auto;
+    animation:pwaPromptSlideIn .3s ease;
+  }
+  .pwa-install-prompt[hidden]{display:none;}
+  .pwa-install-prompt-card{
+    position:relative;
+    background:rgba(255,255,255,.97);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--line);
+    border-radius:16px;
+    box-shadow:0 12px 32px rgba(33,29,26,.22);
+    padding:14px 16px;
+    color:var(--ink);
+    font-family:var(--font-body);
+  }
+  .pwa-install-prompt-close{
+    position:absolute; top:10px; right:10px;
+    width:26px; height:26px; border-radius:50%;
+    border:none; background:transparent; color:var(--ink-faint);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0;
+  }
+  .pwa-install-prompt-head{
+    display:flex; align-items:center; gap:8px; margin-bottom:10px;
+    font-size:14px; font-weight:bold;
+  }
+  .pwa-install-prompt-steps{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:12.5px; line-height:1.7;
+    margin-bottom:10px;
+  }
+  .pwa-install-prompt-step{ display:flex; align-items:center; gap:8px; }
+  .pwa-install-prompt-step + .pwa-install-prompt-step{ margin-top:6px; }
+  .pwa-install-prompt-badge{
+    flex-shrink:0; width:18px; height:18px; border-radius:50%;
+    background:var(--accent-order); color:#fff;
+    font-size:10px; font-weight:bold;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .pwa-install-prompt-foot{
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .pwa-install-prompt-later{
+    border:none; background:transparent; color:var(--ink-faint);
+    font-size:11px; font-weight:bold; cursor:pointer; padding:4px 6px;
+    font-family:inherit;
+  }
+  .pwa-install-prompt-hint{
+    display:flex; align-items:center; gap:4px;
+    font-size:11px; font-weight:bold; color:var(--accent-order);
+    animation:pwaPromptBounce 1.4s infinite;
+  }
+  @keyframes pwaPromptSlideIn{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  @keyframes pwaPromptBounce{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(3px); }
+  }
 </style>
 </head>
 <body>
 
 <div class="page">
-  <div class="page-eyebrow">HAIR Recipe &mdash; UI レイアウト検討プロトタイプ</div>
+  <div class="page-eyebrow">ビューティコーデ &mdash; UI レイアウト検討プロトタイプ</div>
   <h1 class="page-title">チャットで作る、自分だけの髪型カルテ</h1>
 
   <div class="frame-shell">
@@ -788,6 +860,37 @@
 <input type="file" id="fileHairComposite" accept="image/*">
 <input type="file" id="fileFashionToday" accept="image/*">
 <input type="file" id="fileFashionReference" accept="image/*">
+
+<div class="pwa-install-prompt" id="pwaInstallPrompt" hidden>
+  <div class="pwa-install-prompt-card">
+    <button class="pwa-install-prompt-close" id="pwaInstallPromptClose" aria-label="閉じる">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+    <div class="pwa-install-prompt-head">
+      <span>📱</span>
+      <span>iPhoneで毎日快適に使うには</span>
+    </div>
+    <div class="pwa-install-prompt-steps">
+      <div class="pwa-install-prompt-step">
+        <span class="pwa-install-prompt-badge">1</span>
+        <span>画面下の <strong style="color:var(--accent-order)">共有ボタン</strong>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M4 16v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/><path d="M12 12V3m0 0-3 3m3-3 3 3"/></svg>
+          をタップ</span>
+      </div>
+      <div class="pwa-install-prompt-step">
+        <span class="pwa-install-prompt-badge">2</span>
+        <span>メニューから <strong>「ホーム画面に追加」</strong> を選択</span>
+      </div>
+    </div>
+    <div class="pwa-install-prompt-foot">
+      <button class="pwa-install-prompt-later" id="pwaInstallPromptLater">後で案内する</button>
+      <div class="pwa-install-prompt-hint">
+        <span>下をチェック</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9l-7 7-7-7"/></svg>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -3227,6 +3330,51 @@
      11. 初期化
   ========================================================= */
   render();
+})();
+</script>
+
+<script>
+(function(){
+  /* ---------------------------------------------------------
+     PWA「ホーム画面に追加」促しバナー(iOS Safariのみ)。
+     アプリ本体の render() とは独立させ、byId 等のスコープは共有しない。
+  --------------------------------------------------------- */
+  var DISMISS_KEY = "pwa_prompt_dismiss_until";
+  var SHOW_DELAY_MS = 1500;
+  var LATER_MS = 7 * 24 * 60 * 60 * 1000;
+  var CLOSE_MS = 30 * 24 * 60 * 60 * 1000;
+
+  var ua = window.navigator.userAgent.toLowerCase();
+  var isIos = /iphone|ipad|ipod/.test(ua);
+  // Chrome/Firefox for iOS や LINE・Instagram 内ブラウザなどは UA に safari を
+  // 含むことがあるため、それらの識別子を除外して「素の Safari」だけに絞る
+  var isSafari = isIos && ua.indexOf("safari") !== -1 &&
+    ua.indexOf("crios") === -1 && ua.indexOf("fxios") === -1 &&
+    ua.indexOf("edgios") === -1 && ua.indexOf("line") === -1 &&
+    ua.indexOf("fban") === -1 && ua.indexOf("fbav") === -1 &&
+    ua.indexOf("instagram") === -1;
+
+  var isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+    window.navigator.standalone === true;
+
+  if(!isIos || !isSafari || isStandalone) return;
+
+  var dismissUntil = null;
+  try { dismissUntil = window.localStorage.getItem(DISMISS_KEY); } catch(e){}
+  if(dismissUntil && Date.now() < parseInt(dismissUntil, 10)) return;
+
+  var el = document.getElementById("pwaInstallPrompt");
+  if(!el) return;
+
+  function dismiss(durationMs){
+    try { window.localStorage.setItem(DISMISS_KEY, String(Date.now() + durationMs)); } catch(e){}
+    el.hidden = true;
+  }
+
+  document.getElementById("pwaInstallPromptClose").addEventListener("click", function(){ dismiss(CLOSE_MS); });
+  document.getElementById("pwaInstallPromptLater").addEventListener("click", function(){ dismiss(LATER_MS); });
+
+  setTimeout(function(){ el.hidden = false; }, SHOW_DELAY_MS);
 })();
 </script>
 
