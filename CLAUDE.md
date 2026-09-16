@@ -141,6 +141,8 @@ Jake（写真家・個人開発者）のアプリ群（スクアド／SCAD Beaut
 - 環境変数なし。ページは完全に静的生成
 - `app/site.config.js` に文言・リンク・SNSを一元管理。**修正は基本ここだけで完結する**設計
 - `app/page.jsx` の `listImages()` が、ビルド時に `public/images/{hero,gallery}` を `fs.readdirSync` で読み込み、写真を自動反映（コード修正不要）。ヒーロー写真なし→紺グラデーション背景、ギャラリー0枚→写真セクション自体を非表示
+- **アプリ一覧カードのアイコンも同じ考え方**：`findAppScreenshot()` が `public/images/apps/` 配下で「アプリのidで始まるファイル名」（例：`sukuado.jpg`）を探し、あれば文字アイコン（ス/B/S）の代わりにスクリーンショットを表示する。まだ画像は未配置で文字アイコンのまま（2026年9月時点、Jakeが実際のアプリ画面のスクリーンショットを配置予定）
+- **アプリカードはカード全体が1つのリンク**（アイコン・本文・「使ってみる」ボタンどこをクリックしても新しいタブでアプリが開く）。`<a className="app__link">` に `display: contents` を当てて、中の要素はそのまま `.app` のグリッドの子として並べる実装。ボタンは見た目だけの `<span>`（入れ子`<a>`を避けるため）
 - 掲載リンクには計測用UTM（`utm_source=scad_apps_lab&utm_medium=referral&utm_campaign=top`）を`site.config.js`側で付与済み
 - ビルド・PC(1440px)/スマホ(390px)の表示（縦書き見出し・ロゴ折り返しなし含む）を確認済み
 
@@ -164,9 +166,13 @@ Tokyo Solo ClubはAI相談機能を廃止済みなので「AIに相談」系の�
 
 ## 未決定・検討中
 
-- Vercelプロジェクト作成・本番デプロイ（未実施、Jake側で対応予定）
-- 実写真の配置（`public/images/hero/` `gallery/`、Jake本人が用意）
+- Vercelプロジェクト作成・本番デプロイ（Vercelプロジェクト名は`SCAD-APPS-LAB`で作成中。GitHub連携が完了すればpush/マージのたびに自動デプロイされる）
+- アプリ一覧カードのスクリーンショット配置（`public/images/apps/`、Jakeが実際のアプリ画面を用意予定。未配置の間は文字アイコンのまま表示される）
 - 独自ドメイン・OGP画像・開発LOG・事業者向けページは事業化時に検討（今回はやらない）
+
+## 実施済みメモ
+
+- 実写真（ヒーロー1枚・ギャラリー7枚）はJakeがGitHub Web UIから`public/images/hero/` `gallery/`に配置済み（2026年9月）。日本語ファイル名（例：`DRA04944-強化-NR.jpg`）を含むが、`encodeURIComponent`済みのため404は発生していない（動作確認済み）
 
 ---
 
