@@ -2,7 +2,7 @@
 
 ## このファイルについて
 
-スクアドを起点に展開する複数アプリ（スクアド／スクアドビューティー／スクアドソロ／SCAD AI LAB）をまとめて管理するグループ用CLAUDE.mdです。**motionimagingjp/SCAD・SCAD-Beauty・scad-solo・scad-ai-lab の4リポジトリに同一内容をコミットして運用**しています（各リポジトリの直下に置くことで、そのリポジトリで作業するClaude Codeセッションが自動的に読み込みます）。アイコンデザインの系統を揃えて統一感を持たせる方針で開発中。
+スクアドを起点に展開する複数アプリ（スクアド／スクアドビューティー／スクアドソロ／SCAD APPS LAB）をまとめて管理するグループ用CLAUDE.mdです。**motionimagingjp/SCAD・SCAD-Beauty・scad-solo・scad-ai-lab の4リポジトリに同一内容をコミットして運用**しています（各リポジトリの直下に置くことで、そのリポジトリで作業するClaude Codeセッションが自動的に読み込みます）。アイコンデザインの系統を揃えて統一感を持たせる方針で開発中。
 
 更新したら4リポジトリ全てに同じ内容を反映してください。設計決定があった回のチャット終わりに「CLAUDE.mdを更新して」と伝えれば、そのセッションが4リポジトリへ反映します。
 
@@ -126,7 +126,7 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 
 ---
 
-# SCAD AI LAB（統一トップサイト）── リポジトリ: motionimagingjp/scad-ai-lab
+# SCAD APPS LAB（統一トップサイト）── リポジトリ: motionimagingjp/scad-ai-lab
 
 ## 概要
 
@@ -141,7 +141,7 @@ Jake（写真家・個人開発者）のアプリ群（スクアド／SCAD Beaut
 - 環境変数なし。ページは完全に静的生成
 - `app/site.config.js` に文言・リンク・SNSを一元管理。**修正は基本ここだけで完結する**設計
 - `app/page.jsx` の `listImages()` が、ビルド時に `public/images/{hero,gallery}` を `fs.readdirSync` で読み込み、写真を自動反映（コード修正不要）。ヒーロー写真なし→紺グラデーション背景、ギャラリー0枚→写真セクション自体を非表示
-- 掲載リンクには計測用UTM（`utm_source=scad_ai_lab&utm_medium=referral&utm_campaign=top`）を`site.config.js`側で付与済み
+- 掲載リンクには計測用UTM（`utm_source=scad_apps_lab&utm_medium=referral&utm_campaign=top`）を`site.config.js`側で付与済み
 - ビルド・PC(1440px)/スマホ(390px)の表示（縦書き見出し・ロゴ折り返しなし含む）を確認済み
 
 ## 守るべき方針（重要）
