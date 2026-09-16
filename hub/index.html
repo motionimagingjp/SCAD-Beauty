@@ -166,8 +166,8 @@
     box-shadow:var(--shadow);
     padding:24px 24px 22px;
     display:grid;
-    grid-template-columns:minmax(0,1fr) 232px;
-    gap:8px 32px;
+    grid-template-columns:minmax(0,1fr) 168px;
+    gap:8px 24px;
     align-items:start;
   }
   .app-head{grid-column:1;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px}
@@ -211,9 +211,25 @@
   .app-cta:hover{opacity:.88;transform:translateY(-1px)}
   .app-cta .arrow{font-family:var(--mono);font-weight:400}
 
-  .spec{
+  /* 右カラム: 画面イメージ+仕様。縦積みなのでrow-spanの計算は不要 */
+  .app-side{
     grid-column:2;
     grid-row:1 / span 4;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .app-shot{
+    display:block;
+    width:100%;
+    aspect-ratio:9/13;
+    object-fit:cover;
+    object-position:top center;
+    border-radius:14px;
+    border:1px solid var(--line);
+    box-shadow:0 10px 24px -12px rgba(21,24,30,.22);
+  }
+  .spec{
     margin:0;
     padding:14px 0 0;
     border-top:1px solid var(--line-soft);
@@ -263,7 +279,8 @@
   @media (max-width:720px){
     .wrap{padding-block:40px 56px;gap:44px}
     .app{grid-template-columns:minmax(0,1fr);padding:20px 18px}
-    .spec{grid-column:1;grid-row:auto;border-top:1px solid var(--line-soft);margin-top:18px}
+    .app-side{grid-column:1;grid-row:auto;margin-top:18px}
+    .app-shot{max-width:200px;margin:0 auto}
     .app-cta{margin-top:18px}
   }
   @media (prefers-reduced-motion:reduce){
@@ -307,12 +324,15 @@
           ゲームを5種類用意しています。
         </p>
         <a class="app-cta" href="https://mirai-dev-solo.vercel.app/">デモを開く <span class="arrow">→</span></a>
-        <dl class="spec">
-          <dt>Stack</dt><dd>Next.js 14 + Prisma</dd>
-          <dt>DB</dt><dd>PostgreSQL (Neon / sin1)</dd>
-          <dt>API</dt><dd>Google Maps / Geocoding / Places</dd>
-          <dt>運用</dt><dd>Vercel Cron で月1回の閉店確認</dd>
-        </dl>
+        <div class="app-side">
+          <img class="app-shot" src="shots/shot-solo.jpg" alt="MIRAI-Dev-Soloの画面イメージ。近くのソロ向けの店を3軒提案する検索結果画面">
+          <dl class="spec">
+            <dt>Stack</dt><dd>Next.js 14 + Prisma</dd>
+            <dt>DB</dt><dd>PostgreSQL (Neon / sin1)</dd>
+            <dt>API</dt><dd>Google Maps / Geocoding / Places</dd>
+            <dt>運用</dt><dd>Vercel Cron で月1回の閉店確認</dd>
+          </dl>
+        </div>
       </article>
 
       <article class="app" style="--tint:var(--beauty)">
@@ -327,12 +347,15 @@
           スタイリストに相談する前の「予習」として使う想定です。
         </p>
         <a class="app-cta" href="https://mirai-dev-beauty.vercel.app/">デモを開く <span class="arrow">→</span></a>
-        <dl class="spec">
-          <dt>Stack</dt><dd>静的HTML + Vercel Functions</dd>
-          <dt>API</dt><dd>診断用エンドポイント5本</dd>
-          <dt>特徴</dt><dd>APIキーはサーバー側のみ。未接続時はモックへ自動切替</dd>
-          <dt>画像</dt><dd>診断のため一時送信のみ・保存なし</dd>
-        </dl>
+        <div class="app-side">
+          <img class="app-shot" src="shots/shot-beauty.jpg" alt="MIRAI-Dev-Beautyの画面イメージ。ヘアアドバイザーが顔型診断の入力を促すチャット画面">
+          <dl class="spec">
+            <dt>Stack</dt><dd>静的HTML + Vercel Functions</dd>
+            <dt>API</dt><dd>診断用エンドポイント5本</dd>
+            <dt>特徴</dt><dd>APIキーはサーバー側のみ。未接続時はモックへ自動切替</dd>
+            <dt>画像</dt><dd>診断のため一時送信のみ・保存なし</dd>
+          </dl>
+        </div>
       </article>
 
       <article class="app" style="--tint:var(--chat)">
@@ -347,12 +370,15 @@
           含めて助言する設計です。タイプの異なる3人のアドバイザーを選べます。
         </p>
         <a class="app-cta" href="https://mirai-dev-chat.vercel.app/">デモを開く <span class="arrow">→</span></a>
-        <dl class="spec">
-          <dt>Stack</dt><dd>Next.js 14 (App Router)</dd>
-          <dt>AI</dt><dd>gemini-2.5-flash</dd>
-          <dt>特徴</dt><dd>人格3種をオブジェクト1個で管理し、追加は設定のみ</dd>
-          <dt>データ</dt><dd>入力内容はサーバーに保存しない</dd>
-        </dl>
+        <div class="app-side">
+          <img class="app-shot" src="shots/shot-chat.jpg" alt="MIRAI-Dev-Chatの画面イメージ。アドバイザーが返信を提案するチャット画面">
+          <dl class="spec">
+            <dt>Stack</dt><dd>Next.js 14 (App Router)</dd>
+            <dt>AI</dt><dd>gemini-2.5-flash</dd>
+            <dt>特徴</dt><dd>人格3種をオブジェクト1個で管理し、追加は設定のみ</dd>
+            <dt>データ</dt><dd>入力内容はサーバーに保存しない</dd>
+          </dl>
+        </div>
       </article>
 
     </div>
