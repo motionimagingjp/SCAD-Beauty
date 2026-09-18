@@ -1,0 +1,65 @@
+name: Nightly demo sync
+
+# デモ版(mirai-dev-*)は push では自動デプロイされない設定にしてある
+# (各Vercelプロジェクト側の Ignored Build Step を exit 0 に設定)。
+# その代わり、このワークフローが Deploy Hook を叩いてデプロイを起動する。
+#
+# - schedule: 1日3回(JST 3:00 / 8:30 / 12:00)まとめて自動同期。
+#   4プロジェクト分の軽いビルドをcurlで起動するだけなので、
+#   この回数でも負荷・コストとも無視できるレベル
+# - workflow_dispatch: GitHubのActionsタブから手動実行(オンデマンド同期用)
+#
+# 4つのVercelプロジェクト(mirai-dev-chat/beauty/solo/apps)それぞれの
+# Deploy Hook URLを、このリポジトリのSecretsに登録しておく必要がある
+# (Settings → Secrets and variables → Actions):
+#   HOOK_MIRAI_DEV_CHAT / HOOK_MIRAI_DEV_BEAUTY /
+#   HOOK_MIRAI_DEV_SOLO / HOOK_MIRAI_DEV_APPS
+# 未設定のSecretは空文字になりcurlが失敗するだけなので、
+# 4つ揃っていなくても設定済みの分だけ動く。
+
+on:
+  schedule:
+    - cron: '0 18 * * *'  # UTC 18:00 = JST 3:00
+    - cron: '30 23 * * *' # UTC 23:30 = JST 8:30
+    - cron: '0 3 * * *'   # UTC 3:00  = JST 12:00
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: MIRAI-Dev-Chat を同期
+        continue-on-error: true
+        run: |
+          if [ -n "${{ secrets.HOOK_MIRAI_DEV_CHAT }}" ]; then
+            curl -fsS -X POST "${{ secrets.HOOK_MIRAI_DEV_CHAT }}"
+          else
+            echo "HOOK_MIRAI_DEV_CHAT 未設定のためスキップ"
+          fi
+
+      - name: MIRAI-Dev-Beauty を同期
+        continue-on-error: true
+        run: |
+          if [ -n "${{ secrets.HOOK_MIRAI_DEV_BEAUTY }}" ]; then
+            curl -fsS -X POST "${{ secrets.HOOK_MIRAI_DEV_BEAUTY }}"
+          else
+            echo "HOOK_MIRAI_DEV_BEAUTY 未設定のためスキップ"
+          fi
+
+      - name: MIRAI-Dev-Solo を同期
+        continue-on-error: true
+        run: |
+          if [ -n "${{ secrets.HOOK_MIRAI_DEV_SOLO }}" ]; then
+            curl -fsS -X POST "${{ secrets.HOOK_MIRAI_DEV_SOLO }}"
+          else
+            echo "HOOK_MIRAI_DEV_SOLO 未設定のためスキップ"
+          fi
+
+      - name: MIRAI-Dev-Apps(ハブ)を同期
+        continue-on-error: true
+        run: |
+          if [ -n "${{ secrets.HOOK_MIRAI_DEV_APPS }}" ]; then
+            curl -fsS -X POST "${{ secrets.HOOK_MIRAI_DEV_APPS }}"
+          else
+            echo "HOOK_MIRAI_DEV_APPS 未設定のためスキップ"
+          fi
