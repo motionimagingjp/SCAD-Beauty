@@ -190,6 +190,7 @@
     background:var(--surface);
     border-bottom:1px solid var(--line);
     transition:background .25s ease;
+    position:relative;
   }
   .brand-mark{
     width:34px;height:34px;border-radius:10px;
@@ -716,6 +717,34 @@
     .notch{display:none;}
   }
 
+  /* ---------- 埋め込みモード（SCAD CHATのiframeから開いた場合） ---------- */
+  .embed-mode .page{padding:0; min-height:100vh;}
+  .embed-mode .page-title, .embed-mode .page-eyebrow{display:none;}
+  .embed-mode .frame-shell{border-radius:0; padding:0; box-shadow:none; width:100%;}
+  .embed-mode .phone{width:100%; height:100vh; max-height:100vh; max-width:none; border-radius:0;}
+  .embed-mode .notch{display:none;}
+  .embed-mode .statusbar{display:none;}
+  .embed-mode #tabbar{display:none;}
+  /* 埋め込み時もヘッダーは表示したままにする（SCAD CHAT側の指定）。
+     下部タブバーの代わりに、ヘッダーのアイコンボタン列にある専用ボタンで
+     ヘア/ファッションのみ切り替える(既存のカルテ/通知/このアプリについて
+     ボタンと同じ見た目にすることで「押せるボタンだ」と分かるようにしている)。 */
+  .embed-mode .header-icons{gap:4px;}
+
+  .embed-tab-menu{
+    position:absolute; top:100%; right:14px; width:220px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 10px 26px -10px rgba(0,0,0,.3); overflow:hidden; z-index:40;
+  }
+  .embed-tab-menu[hidden]{display:none;}
+  .embed-tab-menu button{
+    width:100%; display:flex; align-items:center; gap:8px; padding:10px 12px;
+    border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left;
+    color:var(--ink); font-size:13px; font-weight:700; white-space:nowrap;
+  }
+  .embed-tab-menu button svg{width:18px; height:18px; flex-shrink:0;}
+  .embed-tab-menu button.active{background:var(--tab-accent-soft, var(--accent-hair-soft));}
+
   /* ---- PWA「ホーム画面に追加」促しバナー ---- */
   .pwa-install-prompt{
     position:fixed;
@@ -801,11 +830,15 @@
       <div class="statusbar"></div>
       <header class="app-header" id="appHeader">
         <div class="brand-mark" id="brandMark">髪</div>
-        <div class="header-text">
+        <div class="header-text" id="headerText">
           <div class="header-mode" id="headerMode">スクアド ヘアスタイル</div>
           <div class="header-app" id="headerApp">ヘアアドバイザー</div>
         </div>
+        <div class="embed-tab-menu" id="embedTabMenu" hidden></div>
         <div class="header-icons">
+          <button class="icon-btn" id="embedTabSwitchBtn" aria-label="ヘア/ファッション切替" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11M15 4l3 3-3 3"/><path d="M17 17H6M9 20l-3-3 3-3"/></svg>
+          </button>
           <button class="icon-btn" id="karteBtn" aria-label="カルテ">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z"/><path d="M15 3v3h3M9 12h6M9 16h6M9 8h3"/></svg>
             <span class="dot"></span>
@@ -936,6 +969,19 @@
     document.title = BRAND.appName;
     var appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
     if (appleTitle) appleTitle.setAttribute("content", BRAND.appName);
+  }
+
+  /* ---------------------------------------------------------
+     SCAD CHATからのiframe埋め込みモード（?embed=1&tab=fashion）。
+     自前のヘッダー・タブバー・端末フレームを隠し、指定タブで開始する。
+     SCAD側のタブバーが唯一のナビゲーションになるよう、ここでは
+     ナビゲーションUIを二重に出さないことが目的。
+  --------------------------------------------------------- */
+  var EMBED_PARAMS = new URLSearchParams(location.search);
+  var EMBED_MODE = EMBED_PARAMS.get("embed") === "1";
+  var EMBED_TAB = EMBED_PARAMS.get("tab");
+  if (EMBED_MODE) {
+    document.documentElement.classList.add("embed-mode");
   }
 
   "use strict";
@@ -1071,16 +1117,20 @@
         location:null, cuisine:null, budgetLabel:null, budgetNote:null, extraNote:null
       }
     };
+    // アクセスのたびに初期画面はヘアアドバイザーにする（前回タブは記憶しない）。
+    // 埋め込みモードでは、SCAD側が指定したタブ（?tab=fashion 等）を優先する。
+    var embedTabValid = EMBED_MODE && EMBED_TAB && TABS.some(function(t){ return t.id === EMBED_TAB; });
+    var initialTab = embedTabValid ? EMBED_TAB : "hair";
     try{
       var raw = localStorage.getItem("hairRecipeState_v1");
       if(raw){
         var parsed = JSON.parse(raw);
         var merged = Object.assign(fallback, parsed);
-        // アクセスのたびに初期画面はヘアアドバイザーにする（前回タブは記憶しない）
-        merged.tab = "hair";
+        merged.tab = initialTab;
         return merged;
       }
     }catch(e){ /* storage unavailable: use fallback silently */ }
+    fallback.tab = initialTab;
     return fallback;
   }
   function saveState(){
@@ -2234,6 +2284,41 @@
   byId("karteBtn").addEventListener("click", function(){ state.tab = "order"; state.seenOrderBadge = true; saveState(); render(); });
   byId("infoBtn").addEventListener("click", function(){ state.tab = "about"; render(); });
 
+  // 埋め込みモード限定：ヘッダーの専用ボタンでヘア／ファッションのみを選べる簡易プルダウン
+  // （下部タブバーは埋め込み時に隠しているため、この2つだけの切替導線として機能する。
+  // 既存のカルテ/通知/このアプリについてボタンと同じ見た目にして、押せることを分かりやすくしている）
+  var EMBED_SWITCHABLE_TABS = ["hair", "fashion"];
+  function closeEmbedTabMenu(){ byId("embedTabMenu").hidden = true; }
+  function toggleEmbedTabMenu(){
+    var menu = byId("embedTabMenu");
+    if(!menu.hidden){ closeEmbedTabMenu(); return; }
+    menu.innerHTML = "";
+    EMBED_SWITCHABLE_TABS.forEach(function(id){
+      var t = tabInfo(id);
+      var btn = el("button", state.tab === id ? "active" : "");
+      btn.innerHTML = ICONS[id] + "<span>" + t.app + "</span>";
+      btn.addEventListener("click", function(){
+        state.tab = id;
+        saveState();
+        closeEmbedTabMenu();
+        render();
+      });
+      menu.appendChild(btn);
+    });
+    menu.hidden = false;
+  }
+  if(EMBED_MODE){
+    var embedTabSwitchBtn = byId("embedTabSwitchBtn");
+    embedTabSwitchBtn.hidden = false;
+    embedTabSwitchBtn.addEventListener("click", toggleEmbedTabMenu);
+    document.addEventListener("click", function(e){
+      var menu = byId("embedTabMenu");
+      if(menu.hidden) return;
+      if(menu.contains(e.target) || embedTabSwitchBtn.contains(e.target)) return;
+      closeEmbedTabMenu();
+    });
+  }
+
   /* =========================================================
      8. ファッションアドバイザー
      -----------------------------------------------------------
@@ -3339,6 +3424,9 @@
      PWA「ホーム画面に追加」促しバナー(iOS Safariのみ)。
      アプリ本体の render() とは独立させ、byId 等のスコープは共有しない。
   --------------------------------------------------------- */
+  // SCAD CHATのiframeに埋め込まれている場合は、単体PWA化を促す意味がないため出さない
+  if (document.documentElement.classList.contains("embed-mode")) return;
+
   var DISMISS_KEY = "pwa_prompt_dismiss_until";
   var SHOW_DELAY_MS = 1500;
   var LATER_MS = 7 * 24 * 60 * 60 * 1000;
