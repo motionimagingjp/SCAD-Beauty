@@ -2,7 +2,7 @@
 
 ## このファイルについて
 
-スクアドを起点に展開する複数アプリ（スクアド／スクアドビューティー／スクアドソロ／SCAD APPS LAB）をまとめて管理するグループ用CLAUDE.mdです。**motionimagingjp/SCAD・SCAD-Beauty・scad-solo・scad-ai-lab の4リポジトリに同一内容をコミットして運用**しています（各リポジトリの直下に置くことで、そのリポジトリで作業するClaude Codeセッションが自動的に読み込みます）。アイコンデザインの系統を揃えて統一感を持たせる方針で開発中。
+スクアドを起点に展開する複数アプリ（スクアド／スクアドビューティー／スクアドソロ／Motion Imaging Lab）をまとめて管理するグループ用CLAUDE.mdです。**motionimagingjp/SCAD・SCAD-Beauty・scad-solo・scad-ai-lab の4リポジトリに同一内容をコミットして運用**しています（各リポジトリの直下に置くことで、そのリポジトリで作業するClaude Codeセッションが自動的に読み込みます）。アイコンデザインの系統を揃えて統一感を持たせる方針で開発中。
 
 更新したら4リポジトリ全てに同じ内容を反映してください。設計決定があった回のチャット終わりに「CLAUDE.mdを更新して」と伝えれば、そのセッションが4リポジトリへ反映します。
 
@@ -34,10 +34,10 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 ## ブランディング
 
 - アドバイザーアイコンは実写調アニメ塗りイラスト（丸型・バストアップ・正面向き・自然光の公園背景）で統一。
-- 「のり様」は SCAD BEAUTY の `profile-avatar.jpg` を外部URL参照で共有（`https://scad-beauty.vercel.app/profile-avatar.jpg`）。サキ・レンは `public/advisor-*.png` としてリポジトリ内にホスト。
+- 「のり様」は イロナビ の `profile-avatar.jpg` を外部URL参照で共有（`https://scad-beauty.vercel.app/profile-avatar.jpg`）。サキ・レンは `public/advisor-*.png` としてリポジトリ内にホスト。
 - UIカラーは白ベース（`#ffffff`）。アドバイザーごとのアクセントカラー: サキ `#e89bb8`、レン `#3a92b5`、のり様 `#b8860b`。
 - 絵文字アイコンから画像アイコンへの切り替えは、`AdvisorIcon` コンポーネント（`icon` フィールドの有無で分岐）で統一的に扱う。
-- 姉妹アプリ導線: aboutページの`SERIES_APPS`で、ヘアスタイル・ファッション相談はSCAD BEAUTYへの外部リンクとして案内している（アプリ内でアドバイザーを一時切替する設計ではなく、別アプリへ誘導する形）。
+- 姉妹アプリ導線: aboutページの`SERIES_APPS`で、ヘアスタイル・ファッション相談はイロナビへの外部リンクとして案内している（アプリ内でアドバイザーを一時切替する設計ではなく、別アプリへ誘導する形）。
 
 ## 確定している設計決定（一部は未実装）
 
@@ -67,11 +67,11 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 ## 関連ファイル・リポジトリ
 
 - X自動投稿の実装詳細: `motionimagingjp/motionimaging` リポジトリの `app/api/post-sukuado-*`, `app/api/_lib/post-sukuado-core.js`
-- 姉妹アプリ: SCAD Beauty（`motionimagingjp/SCAD-Beauty`）, スクアドソロ（`motionimagingjp/scad-solo`）
+- 姉妹アプリ: イロナビ（`motionimagingjp/SCAD-Beauty`）, スクアドソロ（`motionimagingjp/scad-solo`）
 
 ---
 
-# スクアドビューティー（SCAD Beauty）── リポジトリ: motionimagingjp/SCAD-Beauty
+# スクアドビューティー（イロナビ）── リポジトリ: motionimagingjp/SCAD-Beauty
 
 ## 概要
 
@@ -87,7 +87,7 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 ## 確定している設計決定
 
 - アイコンは生成りの背景に横顔の線画
-- X宣伝は現状スクアドチャットが優先。SCAD Beauty専用のInstagram新設などは未着手
+- X宣伝は現状スクアドチャットが優先。イロナビ専用のInstagram新設などは未着手
 
 ## 今後の課題（README記載）
 
@@ -97,7 +97,7 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 
 ---
 
-# スクアドソロ（SCAD-SOLO／ソロ活居酒屋アプリ）── リポジトリ: motionimagingjp/scad-solo
+# スクアドソロ（ヨイナビ／開発名 SCAD-SOLO）── リポジトリ: motionimagingjp/scad-solo
 
 ## 概要
 
@@ -126,23 +126,26 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 
 ---
 
-# SCAD APPS LAB（統一トップサイト）── リポジトリ: motionimagingjp/scad-ai-lab
+# Motion Imaging Lab（統一トップサイト）── リポジトリ: motionimagingjp/scad-ai-lab
 
 ## 概要
 
-Jake（写真家・個人開発者）のアプリ群（スクアド／SCAD Beauty／Tokyo Solo Club）を紹介する**トップ1ページだけの公開サイト**。各アプリへ人を送ることが唯一の目的。事業者向けページ・問い合わせ・開発LOG・CMSは今回は作らない方針（2026年9月時点）。ミゴロンは掲載しない。
+Jake（写真家・個人開発者）のアプリ群（スクアド／イロナビ／ヨイナビ）を紹介する**トップ1ページだけの公開サイト**。各アプリへ人を送ることが唯一の目的。事業者向けページ・問い合わせ・開発LOG・CMSは今回は作らない方針（2026年9月時点）。ミゴロンは掲載しない。
 
 **SCAD-Beauty/hub/（会社共有用デモ環境のハブ）とは別物。** hub/は社内共有用デモの入口、こちらは一般公開する本番サイト。混同しないこと。
 
 ## 実装状況（コード確認済み・2026年9月時点）
 
 - Next.js 16（App Router）／React 19。**JavaScriptのみ（TypeScriptなし）、Tailwindなし（`app/globals.css`に素のCSS1ファイル）**
-- フォント：`next/font/google` の Zen Kaku Gothic New（和文）＋ Outfit（欧文）
+- **デザインコンセプト：「写真のコンタクトシート（見本紙）×開発ログのインデックス」**。paper/navy/brass/cobaltの配色、見出しは明朝（Zen Old Mincho）、コマ番号・小ラベルは等幅（JetBrains Mono）でフィルムのコマ番号のような質感を出している。ヒーロー写真は枠付き・横書き（縦書きは廃止）。「アプリができるまで」のステップはフィルムのパーフォレーション（コマ送り穴）を模したドット装飾つき
+- フォント：`next/font/google` の Zen Kaku Gothic New（和文本文）／Zen Old Mincho（見出し明朝）／JetBrains Mono（コマ番号・小ラベル）
 - 環境変数なし。ページは完全に静的生成
-- `app/site.config.js` に文言・リンク・SNSを一元管理。**修正は基本ここだけで完結する**設計
-- `app/page.jsx` の `listImages()` が、ビルド時に `public/images/{hero,gallery}` を `fs.readdirSync` で読み込み、写真を自動反映（コード修正不要）。ヒーロー写真なし→紺グラデーション背景、ギャラリー0枚→写真セクション自体を非表示
+- `app/site.config.js` に文言・リンク・SNSを一元管理。**修正は基本ここだけで完結する**設計。ヘッダーロゴ・フッターは`site.name`を分割して動的表示（直書きしない）
+- `app/page.jsx` の `listImages()` が、ビルド時に `public/images/{hero,gallery}` を `fs.readdirSync` で読み込み、写真を自動反映（コード修正不要）。ヒーロー写真なし→ストライプ柄プレースホルダー、ギャラリー0枚→写真セクション自体を非表示
+- **アプリ一覧カードはカード全体が1つのリンク**（`.app__link`が`display:grid`で組まれた`<a>`、アイコン・本文・CTA文言どこをクリックしても新しいタブでアプリが開く）
+- **アプリカードのアイコン（`.app__swatch`）は文字アイコン（ス/イ/ヨ）で固定。実際のアプリ画面のスクリーンショットは意図的に不採用**（下記「検討したが見送った変更」参照）
 - 掲載リンクには計測用UTM（`utm_source=scad_apps_lab&utm_medium=referral&utm_campaign=top`）を`site.config.js`側で付与済み
-- ビルド・PC(1440px)/スマホ(390px)の表示（縦書き見出し・ロゴ折り返しなし含む）を確認済み
+- ビルド・PC(1440px)/スマホ(390px)の表示、写真ギャラリーの実写確認（日本語ファイル名含む）を確認済み
 
 ## 守るべき方針（重要）
 
@@ -157,17 +160,31 @@ Jake（写真家・個人開発者）のアプリ群（スクアド／SCAD Beaut
 | アプリ | URL | 配色テーマ |
 |---|---|---|
 | スクアド（SCAD CHAT） | scad-chat.vercel.app | 紺×金（特許出願済みバッジ付き） |
-| SCAD Beauty | scad-beauty.vercel.app | 生成り×茶 |
-| Tokyo Solo Club（開発名 SCAD-SOLO） | scad-solo.vercel.app | 白×オレンジ |
+| イロナビ | scad-beauty.vercel.app | 生成り×茶 |
+| ヨイナビ（開発名 SCAD-SOLO） | scad-solo.vercel.app | 白×オレンジ |
 
-Tokyo Solo ClubはAI相談機能を廃止済みなので「AIに相談」系の説明文は書かないこと。
+ヨイナビはAI相談機能を廃止済みなので「AIに相談」系の説明文は書かないこと。
 
 ## 未決定・検討中
 
-- Vercelプロジェクト作成・本番デプロイ（未実施、Jake側で対応予定）
-- 実写真の配置（`public/images/hero/` `gallery/`、Jake本人が用意）
+- Vercelプロジェクト作成・本番デプロイ（Vercelプロジェクト名は`SCAD-APPS-LAB`で作成中。GitHub連携が完了すればpush/マージのたびに自動デプロイされる）
 - 独自ドメイン・OGP画像・開発LOG・事業者向けページは事業化時に検討（今回はやらない）
+- サイト名は`Motion Imaging Lab`に改名済みだが、Vercelプロジェクト名・ドメイン（scad-apps-lab.vercel.app）は未変更（変更はJake側の手動対応が必要なため据え置き）
 
+## 検討したが見送った変更：アプリカードへのスクリーンショット使用
+
+Jakeが`public/images/apps/{sukuado,beauty,solo}.jpg`（各アプリの実際の画面）をアップロード済み。「使えたら使う、デザイン的に合わなければパスしてよい」という指示のもと、実際に`.app__swatch`（46〜72pxの正方形）に組み込んでPlaywrightで見た目を確認した。
+
+**判断：不採用。文字アイコン（ス/B/S）のまま。**
+- スクアド・ヨイナビは背景が白系で、46〜72pxまで縮小すると内容が判別できない薄い模様になる
+- 3枚とも背景色・情報量がバラバラで、コンタクトシートのコンセプトが持つ統一感のある「色見本」的な世界観が崩れる
+- 文字アイコンの方が遠目にも各アプリを瞬時に識別できる
+
+画像ファイル自体（`public/images/apps/`）は削除せず残してある。将来カードデザインを見直す際の材料として使える。コード側（`findAppScreenshot()`等）は一旦削除済みなので、再度使う場合は実装からやり直しが必要。
+
+## 実施済みメモ
+
+- 実写真（ヒーロー1枚・ギャラリー7枚）はJakeがGitHub Web UIから`public/images/hero/` `gallery/`に配置済み（2026年9月）。日本語ファイル名（例：`DRA04944-強化-NR.jpg`）を含むが、`encodeURIComponent`済みのため404は発生していない（動作確認済み）
 ---
 
 # 姉妹リポジトリ
@@ -214,7 +231,7 @@ SCAD-Beautyだけビルド工程を持たない静的HTMLのため、環境変�
   SNSを増やすときもこの形を崩さないこと
 - **姉妹アプリへのリンクはデモ版同士で閉じる。** 本番URLのままにすると、
   デモを見ている人がリンク1つで本番サイト（＝個人SNSリンクあり）に
-  着地してしまう。過去にSCAD CHAT・SCAD Beauty・scad-soloの3本が
+  着地してしまう。過去にSCAD CHAT・イロナビ・scad-soloの3本が
   相互に本番URLを直書きしていた
 - **アバター画像を他アプリの本番ドメインから参照しない。** SCAD CHATは
   `scad-beauty.vercel.app/profile-avatar.jpg` を参照していたため、
