@@ -60,33 +60,6 @@
     --font-body:"Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
   }
 
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#171513;
-      --stage-bg:#0e0d0c;
-      --surface:#221f1c;
-      --surface-2:#28241f;
-      --ink:#f2ede6;
-      --ink-soft:#b7ac9f;
-      --ink-faint:#7c7266;
-      --line:#3a352e;
-      --line-strong:#4a443b;
-
-      --accent-hair:#e08ba0;
-      --accent-hair-soft:#3a2429;
-      --accent-fashion:#d8b56c;
-      --accent-fashion-soft:#332a1a;
-      --accent-restaurant:#8fc3af;
-      --accent-restaurant-soft:#1f332c;
-      --accent-order:#a9b3dd;
-      --accent-order-soft:#242a3d;
-
-      --user-bubble:#f2ede6;
-      --user-bubble-ink:#211d1a;
-      --ai-bubble:#2b2723;
-      --shadow:0 18px 40px -20px rgba(0,0,0,.6);
-    }
-  }
   :root[data-theme="dark"]{
     --bg:#171513;
     --stage-bg:#0e0d0c;
@@ -190,6 +163,7 @@
     background:var(--surface);
     border-bottom:1px solid var(--line);
     transition:background .25s ease;
+    position:relative;
   }
   .brand-mark{
     width:34px;height:34px;border-radius:10px;
@@ -476,6 +450,7 @@
   .subbar{
     flex:0 0 auto;
     display:flex;
+    flex-wrap:nowrap;
     align-items:center;
     gap:9px;
     padding:8px 14px;
@@ -488,10 +463,13 @@
   .gender-toggle button{
     appearance:none;border:none;background:none;cursor:pointer;
     font-family:var(--font-body);font-size:12px;font-weight:700;
-    padding:5px 15px;border-radius:999px;color:var(--ink-soft);
+    padding:5px 12px;border-radius:999px;color:var(--ink-soft);
     transition:background .12s ease, color .12s ease;
   }
   .gender-toggle button.active{ background:var(--tab-accent, var(--accent-hair)); color:#fff; }
+  /* 性別トグルは絵文字1文字だけにして、見ただけで分かるようにしている
+     （文章中の「レディース/メンズ」表記自体は維持、ボタン表示だけ差し替え） */
+  .emoji-toggle button{ font-size:16px; line-height:1; padding:4px 10px; }
 
   /* ---------- composer (chat input) ---------- */
   .composer{
@@ -579,6 +557,7 @@
   .close-link{
     background:none;border:none;color:var(--ink-soft);font-size:12px;cursor:pointer;
     padding:0;display:inline-flex;align-items:center;gap:4px;
+    white-space:nowrap;flex-shrink:0;
   }
 
   /* ---------- generic screen furniture ---------- */
@@ -716,6 +695,23 @@
     .notch{display:none;}
   }
 
+  /* ---------- 埋め込みモード（SCAD CHATのiframeから開いた場合） ---------- */
+  .embed-mode .page{padding:0; min-height:100vh;}
+  .embed-mode .page-title, .embed-mode .page-eyebrow{display:none;}
+  .embed-mode .frame-shell{border-radius:0; padding:0; box-shadow:none; width:100%;}
+  .embed-mode .phone{width:100%; height:100vh; max-height:100vh; max-width:none; border-radius:0;}
+  .embed-mode .notch{display:none;}
+  .embed-mode .statusbar{display:none;}
+  .embed-mode #tabbar{display:none;}
+  /* 埋め込み時もヘッダーは表示したままにする（SCAD CHAT側の指定）。
+     下部タブバーの代わりに、対象（レディース/メンズ）のトグルと同じ行に
+     ヘア/ファッションの2択トグルを並べる（別行を新設すると縦に窮屈なため、
+     絵文字化した性別ボタンで空いた横幅に収めている）。 */
+  .hf-toggle button{
+    display:flex; align-items:center; gap:3px; white-space:nowrap;
+  }
+  .hf-toggle svg{width:13px; height:13px;}
+
   /* ---- PWA「ホーム画面に追加」促しバナー ---- */
   .pwa-install-prompt{
     position:fixed;
@@ -801,7 +797,7 @@
       <div class="statusbar"></div>
       <header class="app-header" id="appHeader">
         <div class="brand-mark" id="brandMark">髪</div>
-        <div class="header-text">
+        <div class="header-text" id="headerText">
           <div class="header-mode" id="headerMode">スクアド ヘアスタイル</div>
           <div class="header-app" id="headerApp">ヘアアドバイザー</div>
         </div>
@@ -938,6 +934,19 @@
     if (appleTitle) appleTitle.setAttribute("content", BRAND.appName);
   }
 
+  /* ---------------------------------------------------------
+     SCAD CHATからのiframe埋め込みモード（?embed=1&tab=fashion）。
+     自前のヘッダー・タブバー・端末フレームを隠し、指定タブで開始する。
+     SCAD側のタブバーが唯一のナビゲーションになるよう、ここでは
+     ナビゲーションUIを二重に出さないことが目的。
+  --------------------------------------------------------- */
+  var EMBED_PARAMS = new URLSearchParams(location.search);
+  var EMBED_MODE = EMBED_PARAMS.get("embed") === "1";
+  var EMBED_TAB = EMBED_PARAMS.get("tab");
+  if (EMBED_MODE) {
+    document.documentElement.classList.add("embed-mode");
+  }
+
   "use strict";
 
   /* =========================================================
@@ -1071,16 +1080,20 @@
         location:null, cuisine:null, budgetLabel:null, budgetNote:null, extraNote:null
       }
     };
+    // アクセスのたびに初期画面はヘアアドバイザーにする（前回タブは記憶しない）。
+    // 埋め込みモードでは、SCAD側が指定したタブ（?tab=fashion 等）を優先する。
+    var embedTabValid = EMBED_MODE && EMBED_TAB && TABS.some(function(t){ return t.id === EMBED_TAB; });
+    var initialTab = embedTabValid ? EMBED_TAB : "hair";
     try{
       var raw = localStorage.getItem("hairRecipeState_v1");
       if(raw){
         var parsed = JSON.parse(raw);
         var merged = Object.assign(fallback, parsed);
-        // アクセスのたびに初期画面はヘアアドバイザーにする（前回タブは記憶しない）
-        merged.tab = "hair";
+        merged.tab = initialTab;
         return merged;
       }
     }catch(e){ /* storage unavailable: use fallback silently */ }
+    fallback.tab = initialTab;
     return fallback;
   }
   function saveState(){
@@ -1464,9 +1477,12 @@
     bar.hidden = false;
     bar.innerHTML = "";
     bar.appendChild(el("span", "subbar-label", state.tab === "restaurant" ? "お相手:" : "対象:"));
-    var toggle = el("div", "gender-toggle");
+    var toggle = el("div", "gender-toggle emoji-toggle");
+    var GENDER_EMOJI = { women: "👩", men: "👨" };
     ["women","men"].forEach(function(g){
-      var b = el("button", state.gender===g ? "active":"", genderLabel(g));
+      var b = el("button", state.gender===g ? "active":"", GENDER_EMOJI[g]);
+      b.setAttribute("aria-label", genderLabel(g));
+      b.title = genderLabel(g);
       b.addEventListener("click", function(){
         if(state.gender === g) return;
         state.gender = g;
@@ -1480,6 +1496,26 @@
       toggle.appendChild(b);
     });
     bar.appendChild(toggle);
+
+    // 埋め込みモード限定：ヘア/ファッションの2択もこの行にまとめる
+    // （下部タブバーを隠しているため、この2つだけの切替導線として機能する。
+    // 「ファッション」は長いため、この行内の表示だけ「コーデ」に短縮している）
+    if(EMBED_MODE && (state.tab === "hair" || state.tab === "fashion")){
+      var EMBED_TAB_SHORT_LABEL = { hair: "ヘア", fashion: "コーデ" };
+      var hfToggle = el("div", "gender-toggle hf-toggle");
+      ["hair", "fashion"].forEach(function(id){
+        var b = el("button", state.tab === id ? "active" : "");
+        b.innerHTML = ICONS[id] + "<span>" + EMBED_TAB_SHORT_LABEL[id] + "</span>";
+        b.addEventListener("click", function(){
+          if(state.tab === id) return;
+          state.tab = id;
+          saveState();
+          render();
+        });
+        hfToggle.appendChild(b);
+      });
+      bar.appendChild(hfToggle);
+    }
 
     if(state.tab === "hair" || state.tab === "fashion" || state.tab === "restaurant"){
       var resetLink = el("button","close-link","🔄 最初から");
@@ -1535,7 +1571,7 @@
     if(!state.chat.started){
       state.chat.started = true;
       pushLog({ type:"ai", text:"こんにちは！あなたに一番似合う髪型を一緒に見つけましょう。" });
-      pushLog({ type:"ai", text:"まずは顔型（骨格）を教えてください。ご自身で選ぶか、自撮りをアップロードしてください。" });
+      pushLog({ type:"ai", text:"まずは顔型（骨格）を教えてください。" });
       pushLog({ type:"faceshape-prompt" });
     }
   }
@@ -3339,6 +3375,9 @@
      PWA「ホーム画面に追加」促しバナー(iOS Safariのみ)。
      アプリ本体の render() とは独立させ、byId 等のスコープは共有しない。
   --------------------------------------------------------- */
+  // SCAD CHATのiframeに埋め込まれている場合は、単体PWA化を促す意味がないため出さない
+  if (document.documentElement.classList.contains("embed-mode")) return;
+
   var DISMISS_KEY = "pwa_prompt_dismiss_until";
   var SHOW_DELAY_MS = 1500;
   var LATER_MS = 7 * 24 * 60 * 60 * 1000;

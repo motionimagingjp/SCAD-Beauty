@@ -95,6 +95,55 @@
   :where(a,button):focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
 
   /* ---- ヘッダー ---- */
+  .header-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .header-top .eyebrow{margin-bottom:0}
+  .share-btn{
+    flex-shrink:0;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:8px 16px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    box-shadow:var(--shadow);
+    font-family:var(--display);
+    font-weight:700;
+    font-size:13px;
+    color:var(--ink);
+    cursor:pointer;
+    transition:opacity .15s ease, transform .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .share-btn svg{width:15px;height:15px;flex-shrink:0}
+  .share-btn:hover{opacity:.85;transform:translateY(-1px)}
+  .share-btn:active{transform:translateY(0)}
+  .share-btn.is-done{color:var(--accent);border-color:var(--accent)}
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:28px;
+    transform:translate(-50%,12px);
+    padding:10px 20px;
+    border-radius:999px;
+    background:var(--ink);
+    color:var(--ground);
+    font-size:13px;
+    font-weight:500;
+    box-shadow:var(--shadow);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:10;
+  }
+  .toast.is-visible{opacity:1;transform:translate(-50%,0)}
+
   .eyebrow{
     font-family:var(--mono);
     font-size:11px;
@@ -166,8 +215,8 @@
     box-shadow:var(--shadow);
     padding:24px 24px 22px;
     display:grid;
-    grid-template-columns:minmax(0,1fr) 232px;
-    gap:8px 32px;
+    grid-template-columns:minmax(0,1fr) 168px;
+    gap:8px 24px;
     align-items:start;
   }
   .app-head{grid-column:1;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px}
@@ -211,9 +260,25 @@
   .app-cta:hover{opacity:.88;transform:translateY(-1px)}
   .app-cta .arrow{font-family:var(--mono);font-weight:400}
 
-  .spec{
+  /* 右カラム: 画面イメージ+仕様。縦積みなのでrow-spanの計算は不要 */
+  .app-side{
     grid-column:2;
     grid-row:1 / span 4;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .app-shot{
+    display:block;
+    width:100%;
+    aspect-ratio:9/13;
+    object-fit:cover;
+    object-position:top center;
+    border-radius:14px;
+    border:1px solid var(--line);
+    box-shadow:0 10px 24px -12px rgba(21,24,30,.22);
+  }
+  .spec{
     margin:0;
     padding:14px 0 0;
     border-top:1px solid var(--line-soft);
@@ -263,7 +328,8 @@
   @media (max-width:720px){
     .wrap{padding-block:40px 56px;gap:44px}
     .app{grid-template-columns:minmax(0,1fr);padding:20px 18px}
-    .spec{grid-column:1;grid-row:auto;border-top:1px solid var(--line-soft);margin-top:18px}
+    .app-side{grid-column:1;grid-row:auto;margin-top:18px}
+    .app-shot{max-width:200px;margin:0 auto}
     .app-cta{margin-top:18px}
   }
   @media (prefers-reduced-motion:reduce){
@@ -275,7 +341,16 @@
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">社内共有用デモ環境</p>
+    <div class="header-top">
+      <p class="eyebrow">プロトタイプ</p>
+      <button id="shareBtn" class="share-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/>
+        </svg>
+        <span id="shareBtnLabel">シェア</span>
+      </button>
+    </div>
     <h1>MIRAI-Dev-Apps</h1>
     <p class="lead">
       生成AIの個人的なトライアルとして開発しているWebアプリ3本のデモ環境です。
@@ -307,12 +382,15 @@
           ゲームを5種類用意しています。
         </p>
         <a class="app-cta" href="https://mirai-dev-solo.vercel.app/">デモを開く <span class="arrow">→</span></a>
-        <dl class="spec">
-          <dt>Stack</dt><dd>Next.js 14 + Prisma</dd>
-          <dt>DB</dt><dd>PostgreSQL (Neon / sin1)</dd>
-          <dt>API</dt><dd>Google Maps / Geocoding / Places</dd>
-          <dt>運用</dt><dd>Vercel Cron で月1回の閉店確認</dd>
-        </dl>
+        <div class="app-side">
+          <img class="app-shot" src="shots/shot-solo.jpg" alt="MIRAI-Dev-Soloの画面イメージ。近くのソロ向けの店を3軒提案する検索結果画面">
+          <dl class="spec">
+            <dt>Stack</dt><dd>Next.js 14 + Prisma</dd>
+            <dt>DB</dt><dd>PostgreSQL (Neon / sin1)</dd>
+            <dt>API</dt><dd>Google Maps / Geocoding / Places</dd>
+            <dt>運用</dt><dd>Vercel Cron で月1回の閉店確認</dd>
+          </dl>
+        </div>
       </article>
 
       <article class="app" style="--tint:var(--beauty)">
@@ -327,12 +405,15 @@
           スタイリストに相談する前の「予習」として使う想定です。
         </p>
         <a class="app-cta" href="https://mirai-dev-beauty.vercel.app/">デモを開く <span class="arrow">→</span></a>
-        <dl class="spec">
-          <dt>Stack</dt><dd>静的HTML + Vercel Functions</dd>
-          <dt>API</dt><dd>診断用エンドポイント5本</dd>
-          <dt>特徴</dt><dd>APIキーはサーバー側のみ。未接続時はモックへ自動切替</dd>
-          <dt>画像</dt><dd>診断のため一時送信のみ・保存なし</dd>
-        </dl>
+        <div class="app-side">
+          <img class="app-shot" src="shots/shot-beauty.jpg" alt="MIRAI-Dev-Beautyの画面イメージ。ヘアアドバイザーが顔型診断の入力を促すチャット画面">
+          <dl class="spec">
+            <dt>Stack</dt><dd>静的HTML + Vercel Functions</dd>
+            <dt>API</dt><dd>診断用エンドポイント5本</dd>
+            <dt>特徴</dt><dd>APIキーはサーバー側のみ。未接続時はモックへ自動切替</dd>
+            <dt>画像</dt><dd>診断のため一時送信のみ・保存なし</dd>
+          </dl>
+        </div>
       </article>
 
       <article class="app" style="--tint:var(--chat)">
@@ -347,12 +428,15 @@
           含めて助言する設計です。タイプの異なる3人のアドバイザーを選べます。
         </p>
         <a class="app-cta" href="https://mirai-dev-chat.vercel.app/">デモを開く <span class="arrow">→</span></a>
-        <dl class="spec">
-          <dt>Stack</dt><dd>Next.js 14 (App Router)</dd>
-          <dt>AI</dt><dd>gemini-2.5-flash</dd>
-          <dt>特徴</dt><dd>人格3種をオブジェクト1個で管理し、追加は設定のみ</dd>
-          <dt>データ</dt><dd>入力内容はサーバーに保存しない</dd>
-        </dl>
+        <div class="app-side">
+          <img class="app-shot" src="shots/shot-chat.jpg" alt="MIRAI-Dev-Chatの画面イメージ。アドバイザーが返信を提案するチャット画面">
+          <dl class="spec">
+            <dt>Stack</dt><dd>Next.js 14 (App Router)</dd>
+            <dt>AI</dt><dd>gemini-2.5-flash</dd>
+            <dt>特徴</dt><dd>人格3種をオブジェクト1個で管理し、追加は設定のみ</dd>
+            <dt>データ</dt><dd>入力内容はサーバーに保存しない</dd>
+          </dl>
+        </div>
       </article>
 
     </div>
@@ -403,5 +487,57 @@
   </footer>
 
 </div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+  var shareText = "個人で開発しているアプリのデモを公開しました。よかったら覗いてみてください🙌";
+
+  function showToast(message){
+    var toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.classList.add("is-visible");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function(){
+      toast.classList.remove("is-visible");
+    }, 2200);
+  }
+
+  async function share(){
+    var url = location.href;
+    var btn = document.getElementById("shareBtn");
+    var label = document.getElementById("shareBtnLabel");
+
+    // モバイルはOS標準の共有シート(LINE等含む)を優先する
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: document.title, text: shareText, url: url });
+      } catch (e) {
+        // ユーザーがキャンセルしただけの場合は何もしない
+      }
+      return;
+    }
+
+    // PCブラウザ等、Web Share API非対応の場合はクリップボードにコピー
+    var payload = shareText + "\n" + url;
+    try {
+      await navigator.clipboard.writeText(payload);
+      showToast("リンクをコピーしました");
+      label.textContent = "コピーしました";
+      btn.classList.add("is-done");
+      setTimeout(function(){
+        label.textContent = "シェア";
+        btn.classList.remove("is-done");
+      }, 2200);
+    } catch (e) {
+      showToast("コピーできませんでした。URLを直接お伝えください");
+    }
+  }
+
+  document.getElementById("shareBtn").addEventListener("click", share);
+})();
+</script>
 </body>
 </html>
