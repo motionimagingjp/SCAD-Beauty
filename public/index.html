@@ -726,24 +726,25 @@
   .embed-mode .statusbar{display:none;}
   .embed-mode #tabbar{display:none;}
   /* 埋め込み時もヘッダーは表示したままにする（SCAD CHAT側の指定）。
-     下部タブバーの代わりに、ヘッダーのアイコンボタン列にある専用ボタンで
-     ヘア/ファッションのみ切り替える(既存のカルテ/通知/このアプリについて
-     ボタンと同じ見た目にすることで「押せるボタンだ」と分かるようにしている)。 */
-  .embed-mode .header-icons{gap:4px;}
-
-  .embed-tab-menu{
-    position:absolute; top:100%; right:14px; width:220px;
-    background:var(--surface); border:1px solid var(--line); border-radius:12px;
-    box-shadow:0 10px 26px -10px rgba(0,0,0,.3); overflow:hidden; z-index:40;
+     下部タブバーの代わりに、ヘッダー直下に常時両方見えるヘア/ファッションの
+     2択トグルを置く（アイコン1個をタップするまで選択肢の存在が分からない、
+     という問題があったため、対象（レディース/メンズ）のトグルと同じ
+     「常に両方見える」方式に統一した）。 */
+  .embed-tab-switch{
+    display:flex; gap:8px; padding:10px 14px;
+    background:var(--surface); border-bottom:1px solid var(--line);
   }
-  .embed-tab-menu[hidden]{display:none;}
-  .embed-tab-menu button{
-    width:100%; display:flex; align-items:center; gap:8px; padding:10px 12px;
-    border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left;
-    color:var(--ink); font-size:13px; font-weight:700; white-space:nowrap;
+  .embed-tab-switch[hidden]{display:none;}
+  .embed-tab-switch button{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:10px 0; border-radius:14px; border:1px solid var(--line);
+    background:var(--surface-2); color:var(--ink-soft);
+    font-family:inherit; font-size:13px; font-weight:700; cursor:pointer;
   }
-  .embed-tab-menu button svg{width:18px; height:18px; flex-shrink:0;}
-  .embed-tab-menu button.active{background:var(--tab-accent-soft, var(--accent-hair-soft));}
+  .embed-tab-switch button svg{width:16px; height:16px;}
+  .embed-tab-switch button.active{
+    background:var(--tab-accent, var(--accent-hair)); border-color:var(--tab-accent, var(--accent-hair)); color:#fff;
+  }
 
   /* ---- PWA「ホーム画面に追加」促しバナー ---- */
   .pwa-install-prompt{
@@ -834,11 +835,7 @@
           <div class="header-mode" id="headerMode">スクアド ヘアスタイル</div>
           <div class="header-app" id="headerApp">ヘアアドバイザー</div>
         </div>
-        <div class="embed-tab-menu" id="embedTabMenu" hidden></div>
         <div class="header-icons">
-          <button class="icon-btn" id="embedTabSwitchBtn" aria-label="ヘア/ファッション切替" hidden>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11M15 4l3 3-3 3"/><path d="M17 17H6M9 20l-3-3 3-3"/></svg>
-          </button>
           <button class="icon-btn" id="karteBtn" aria-label="カルテ">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z"/><path d="M15 3v3h3M9 12h6M9 16h6M9 8h3"/></svg>
             <span class="dot"></span>
@@ -852,6 +849,8 @@
           </button>
         </div>
       </header>
+
+      <div class="embed-tab-switch" id="embedTabSwitch" hidden></div>
 
       <div class="subbar" id="subbar" hidden></div>
 
@@ -1564,6 +1563,7 @@
   function render(){
     renderHeader();
     renderTabbar();
+    renderEmbedTabSwitch();
     renderSubbar();
     renderComposer();
     var screen = byId("screen");
@@ -2284,38 +2284,27 @@
   byId("karteBtn").addEventListener("click", function(){ state.tab = "order"; state.seenOrderBadge = true; saveState(); render(); });
   byId("infoBtn").addEventListener("click", function(){ state.tab = "about"; render(); });
 
-  // 埋め込みモード限定：ヘッダーの専用ボタンでヘア／ファッションのみを選べる簡易プルダウン
+  // 埋め込みモード限定：ヘア／ファッションを常時両方見える2択ボタンで切り替える
   // （下部タブバーは埋め込み時に隠しているため、この2つだけの切替導線として機能する。
-  // 既存のカルテ/通知/このアプリについてボタンと同じ見た目にして、押せることを分かりやすくしている）
+  // アイコン1個をタップするまで選択肢の存在が分からない、という問題があったため、
+  // 対象（レディース/メンズ）のトグルと同じ「常に両方見える」方式にしている）
   var EMBED_SWITCHABLE_TABS = ["hair", "fashion"];
-  function closeEmbedTabMenu(){ byId("embedTabMenu").hidden = true; }
-  function toggleEmbedTabMenu(){
-    var menu = byId("embedTabMenu");
-    if(!menu.hidden){ closeEmbedTabMenu(); return; }
-    menu.innerHTML = "";
+  function renderEmbedTabSwitch(){
+    if(!EMBED_MODE) return;
+    var bar = byId("embedTabSwitch");
+    bar.hidden = false;
+    bar.innerHTML = "";
     EMBED_SWITCHABLE_TABS.forEach(function(id){
       var t = tabInfo(id);
       var btn = el("button", state.tab === id ? "active" : "");
-      btn.innerHTML = ICONS[id] + "<span>" + t.app + "</span>";
+      btn.innerHTML = ICONS[id] + "<span>" + t.label + "</span>";
       btn.addEventListener("click", function(){
+        if(state.tab === id) return;
         state.tab = id;
         saveState();
-        closeEmbedTabMenu();
         render();
       });
-      menu.appendChild(btn);
-    });
-    menu.hidden = false;
-  }
-  if(EMBED_MODE){
-    var embedTabSwitchBtn = byId("embedTabSwitchBtn");
-    embedTabSwitchBtn.hidden = false;
-    embedTabSwitchBtn.addEventListener("click", toggleEmbedTabMenu);
-    document.addEventListener("click", function(e){
-      var menu = byId("embedTabMenu");
-      if(menu.hidden) return;
-      if(menu.contains(e.target) || embedTabSwitchBtn.contains(e.target)) return;
-      closeEmbedTabMenu();
+      bar.appendChild(btn);
     });
   }
 
