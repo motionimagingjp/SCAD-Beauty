@@ -477,6 +477,7 @@
   .subbar{
     flex:0 0 auto;
     display:flex;
+    flex-wrap:nowrap;
     align-items:center;
     gap:9px;
     padding:8px 14px;
@@ -489,10 +490,13 @@
   .gender-toggle button{
     appearance:none;border:none;background:none;cursor:pointer;
     font-family:var(--font-body);font-size:12px;font-weight:700;
-    padding:5px 15px;border-radius:999px;color:var(--ink-soft);
+    padding:5px 12px;border-radius:999px;color:var(--ink-soft);
     transition:background .12s ease, color .12s ease;
   }
   .gender-toggle button.active{ background:var(--tab-accent, var(--accent-hair)); color:#fff; }
+  /* 性別トグルは絵文字1文字だけにして、見ただけで分かるようにしている
+     （文章中の「レディース/メンズ」表記自体は維持、ボタン表示だけ差し替え） */
+  .emoji-toggle button{ font-size:16px; line-height:1; padding:4px 10px; }
 
   /* ---------- composer (chat input) ---------- */
   .composer{
@@ -580,6 +584,7 @@
   .close-link{
     background:none;border:none;color:var(--ink-soft);font-size:12px;cursor:pointer;
     padding:0;display:inline-flex;align-items:center;gap:4px;
+    white-space:nowrap;flex-shrink:0;
   }
 
   /* ---------- generic screen furniture ---------- */
@@ -726,24 +731,13 @@
   .embed-mode .statusbar{display:none;}
   .embed-mode #tabbar{display:none;}
   /* 埋め込み時もヘッダーは表示したままにする（SCAD CHAT側の指定）。
-     下部タブバーの代わりに、ヘッダーのアイコンボタン列にある専用ボタンで
-     ヘア/ファッションのみ切り替える(既存のカルテ/通知/このアプリについて
-     ボタンと同じ見た目にすることで「押せるボタンだ」と分かるようにしている)。 */
-  .embed-mode .header-icons{gap:4px;}
-
-  .embed-tab-menu{
-    position:absolute; top:100%; right:14px; width:220px;
-    background:var(--surface); border:1px solid var(--line); border-radius:12px;
-    box-shadow:0 10px 26px -10px rgba(0,0,0,.3); overflow:hidden; z-index:40;
+     下部タブバーの代わりに、対象（レディース/メンズ）のトグルと同じ行に
+     ヘア/ファッションの2択トグルを並べる（別行を新設すると縦に窮屈なため、
+     絵文字化した性別ボタンで空いた横幅に収めている）。 */
+  .hf-toggle button{
+    display:flex; align-items:center; gap:3px; white-space:nowrap;
   }
-  .embed-tab-menu[hidden]{display:none;}
-  .embed-tab-menu button{
-    width:100%; display:flex; align-items:center; gap:8px; padding:10px 12px;
-    border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left;
-    color:var(--ink); font-size:13px; font-weight:700; white-space:nowrap;
-  }
-  .embed-tab-menu button svg{width:18px; height:18px; flex-shrink:0;}
-  .embed-tab-menu button.active{background:var(--tab-accent-soft, var(--accent-hair-soft));}
+  .hf-toggle svg{width:13px; height:13px;}
 
   /* ---- PWA「ホーム画面に追加」促しバナー ---- */
   .pwa-install-prompt{
@@ -834,11 +828,7 @@
           <div class="header-mode" id="headerMode">スクアド ヘアスタイル</div>
           <div class="header-app" id="headerApp">ヘアアドバイザー</div>
         </div>
-        <div class="embed-tab-menu" id="embedTabMenu" hidden></div>
         <div class="header-icons">
-          <button class="icon-btn" id="embedTabSwitchBtn" aria-label="ヘア/ファッション切替" hidden>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11M15 4l3 3-3 3"/><path d="M17 17H6M9 20l-3-3 3-3"/></svg>
-          </button>
           <button class="icon-btn" id="karteBtn" aria-label="カルテ">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z"/><path d="M15 3v3h3M9 12h6M9 16h6M9 8h3"/></svg>
             <span class="dot"></span>
@@ -1514,9 +1504,12 @@
     bar.hidden = false;
     bar.innerHTML = "";
     bar.appendChild(el("span", "subbar-label", state.tab === "restaurant" ? "お相手:" : "対象:"));
-    var toggle = el("div", "gender-toggle");
+    var toggle = el("div", "gender-toggle emoji-toggle");
+    var GENDER_EMOJI = { women: "👩", men: "👨" };
     ["women","men"].forEach(function(g){
-      var b = el("button", state.gender===g ? "active":"", genderLabel(g));
+      var b = el("button", state.gender===g ? "active":"", GENDER_EMOJI[g]);
+      b.setAttribute("aria-label", genderLabel(g));
+      b.title = genderLabel(g);
       b.addEventListener("click", function(){
         if(state.gender === g) return;
         state.gender = g;
@@ -1530,6 +1523,26 @@
       toggle.appendChild(b);
     });
     bar.appendChild(toggle);
+
+    // 埋め込みモード限定：ヘア/ファッションの2択もこの行にまとめる
+    // （下部タブバーを隠しているため、この2つだけの切替導線として機能する。
+    // 「ファッション」は長いため、この行内の表示だけ「コーデ」に短縮している）
+    if(EMBED_MODE && (state.tab === "hair" || state.tab === "fashion")){
+      var EMBED_TAB_SHORT_LABEL = { hair: "ヘア", fashion: "コーデ" };
+      var hfToggle = el("div", "gender-toggle hf-toggle");
+      ["hair", "fashion"].forEach(function(id){
+        var b = el("button", state.tab === id ? "active" : "");
+        b.innerHTML = ICONS[id] + "<span>" + EMBED_TAB_SHORT_LABEL[id] + "</span>";
+        b.addEventListener("click", function(){
+          if(state.tab === id) return;
+          state.tab = id;
+          saveState();
+          render();
+        });
+        hfToggle.appendChild(b);
+      });
+      bar.appendChild(hfToggle);
+    }
 
     if(state.tab === "hair" || state.tab === "fashion" || state.tab === "restaurant"){
       var resetLink = el("button","close-link","🔄 最初から");
@@ -2283,41 +2296,6 @@
   // ヘッダーアイコンの配線（カルテ／通知／このアプリについて）
   byId("karteBtn").addEventListener("click", function(){ state.tab = "order"; state.seenOrderBadge = true; saveState(); render(); });
   byId("infoBtn").addEventListener("click", function(){ state.tab = "about"; render(); });
-
-  // 埋め込みモード限定：ヘッダーの専用ボタンでヘア／ファッションのみを選べる簡易プルダウン
-  // （下部タブバーは埋め込み時に隠しているため、この2つだけの切替導線として機能する。
-  // 既存のカルテ/通知/このアプリについてボタンと同じ見た目にして、押せることを分かりやすくしている）
-  var EMBED_SWITCHABLE_TABS = ["hair", "fashion"];
-  function closeEmbedTabMenu(){ byId("embedTabMenu").hidden = true; }
-  function toggleEmbedTabMenu(){
-    var menu = byId("embedTabMenu");
-    if(!menu.hidden){ closeEmbedTabMenu(); return; }
-    menu.innerHTML = "";
-    EMBED_SWITCHABLE_TABS.forEach(function(id){
-      var t = tabInfo(id);
-      var btn = el("button", state.tab === id ? "active" : "");
-      btn.innerHTML = ICONS[id] + "<span>" + t.app + "</span>";
-      btn.addEventListener("click", function(){
-        state.tab = id;
-        saveState();
-        closeEmbedTabMenu();
-        render();
-      });
-      menu.appendChild(btn);
-    });
-    menu.hidden = false;
-  }
-  if(EMBED_MODE){
-    var embedTabSwitchBtn = byId("embedTabSwitchBtn");
-    embedTabSwitchBtn.hidden = false;
-    embedTabSwitchBtn.addEventListener("click", toggleEmbedTabMenu);
-    document.addEventListener("click", function(e){
-      var menu = byId("embedTabMenu");
-      if(menu.hidden) return;
-      if(menu.contains(e.target) || embedTabSwitchBtn.contains(e.target)) return;
-      closeEmbedTabMenu();
-    });
-  }
 
   /* =========================================================
      8. ファッションアドバイザー
