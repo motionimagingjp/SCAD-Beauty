@@ -726,13 +726,13 @@
   .embed-mode .statusbar{display:none;}
   .embed-mode #tabbar{display:none;}
   /* 埋め込み時もヘッダーは表示したままにする（SCAD CHAT側の指定）。
-     下部タブバーの代わりに、ヘッダー内のプルダウンでヘア/ファッションのみ切り替える。 */
-  .embed-mode #headerText{cursor:pointer;}
-  .embed-mode #headerAppChevron{display:inline; margin-left:3px; font-size:0.75em; color:var(--ink-faint);}
+     下部タブバーの代わりに、ヘッダーのアイコンボタン列にある専用ボタンで
+     ヘア/ファッションのみ切り替える(既存のカルテ/通知/このアプリについて
+     ボタンと同じ見た目にすることで「押せるボタンだ」と分かるようにしている)。 */
   .embed-mode .header-icons{gap:4px;}
 
   .embed-tab-menu{
-    position:absolute; top:100%; left:14px; right:70px;
+    position:absolute; top:100%; right:14px; width:220px;
     background:var(--surface); border:1px solid var(--line); border-radius:12px;
     box-shadow:0 10px 26px -10px rgba(0,0,0,.3); overflow:hidden; z-index:40;
   }
@@ -740,7 +740,7 @@
   .embed-tab-menu button{
     width:100%; display:flex; align-items:center; gap:8px; padding:10px 12px;
     border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left;
-    color:var(--ink); font-size:13px; font-weight:700;
+    color:var(--ink); font-size:13px; font-weight:700; white-space:nowrap;
   }
   .embed-tab-menu button svg{width:18px; height:18px; flex-shrink:0;}
   .embed-tab-menu button.active{background:var(--tab-accent-soft, var(--accent-hair-soft));}
@@ -832,10 +832,13 @@
         <div class="brand-mark" id="brandMark">髪</div>
         <div class="header-text" id="headerText">
           <div class="header-mode" id="headerMode">スクアド ヘアスタイル</div>
-          <div class="header-app" id="headerApp">ヘアアドバイザー<span id="headerAppChevron" hidden>▾</span></div>
+          <div class="header-app" id="headerApp">ヘアアドバイザー</div>
         </div>
         <div class="embed-tab-menu" id="embedTabMenu" hidden></div>
         <div class="header-icons">
+          <button class="icon-btn" id="embedTabSwitchBtn" aria-label="ヘア/ファッション切替" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11M15 4l3 3-3 3"/><path d="M17 17H6M9 20l-3-3 3-3"/></svg>
+          </button>
           <button class="icon-btn" id="karteBtn" aria-label="カルテ">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z"/><path d="M15 3v3h3M9 12h6M9 16h6M9 8h3"/></svg>
             <span class="dot"></span>
@@ -2281,8 +2284,9 @@
   byId("karteBtn").addEventListener("click", function(){ state.tab = "order"; state.seenOrderBadge = true; saveState(); render(); });
   byId("infoBtn").addEventListener("click", function(){ state.tab = "about"; render(); });
 
-  // 埋め込みモード限定：ヘッダーのタップでヘア／ファッションのみを選べる簡易プルダウン
-  // （下部タブバーは埋め込み時に隠しているため、この2つだけの切替導線として機能する）
+  // 埋め込みモード限定：ヘッダーの専用ボタンでヘア／ファッションのみを選べる簡易プルダウン
+  // （下部タブバーは埋め込み時に隠しているため、この2つだけの切替導線として機能する。
+  // 既存のカルテ/通知/このアプリについてボタンと同じ見た目にして、押せることを分かりやすくしている）
   var EMBED_SWITCHABLE_TABS = ["hair", "fashion"];
   function closeEmbedTabMenu(){ byId("embedTabMenu").hidden = true; }
   function toggleEmbedTabMenu(){
@@ -2304,11 +2308,13 @@
     menu.hidden = false;
   }
   if(EMBED_MODE){
-    byId("headerText").addEventListener("click", toggleEmbedTabMenu);
+    var embedTabSwitchBtn = byId("embedTabSwitchBtn");
+    embedTabSwitchBtn.hidden = false;
+    embedTabSwitchBtn.addEventListener("click", toggleEmbedTabMenu);
     document.addEventListener("click", function(e){
       var menu = byId("embedTabMenu");
       if(menu.hidden) return;
-      if(menu.contains(e.target) || byId("headerText").contains(e.target)) return;
+      if(menu.contains(e.target) || embedTabSwitchBtn.contains(e.target)) return;
       closeEmbedTabMenu();
     });
   }
