@@ -238,3 +238,26 @@ SCAD-Beautyだけビルド工程を持たない静的HTMLのため、環境変�
 **Root Directory に `hub` を指定**した別プロジェクトとして公開する。
 将来 `mirai-dev-apps` リポジトリを作る場合は、`hub/` の中身をそのまま
 新リポジトリのルートに移せばよい（相対リンク・外部アセットを持たない）。
+
+## デモ版の反映タイミング（本番は即時、デモは夜間バッチ）
+
+本番（scad-chat / scad-beauty / scad-solo）は従来通り `main` へのpushで
+即デプロイされる。**デモ4プロジェクト（mirai-dev-chat/beauty/solo/apps）
+だけは、pushしても自動デプロイされない設定にしてある**（各Vercel
+プロジェクトの Settings → Git → Ignored Build Step を `exit 0` に設定
+済み）。コード側（`main`を共有する構成）は変更していない。
+
+デモへの反映は以下の2通り:
+- **夜間の自動同期**: `SCAD-Beauty/.github/workflows/nightly-demo-sync.yml`
+  が毎晩JST 3:00に4つのVercel Deploy Hookをまとめて叩き、その時点の
+  `main`の内容でデプロイする
+- **オンデマンド同期**: GitHubの当該リポジトリのActionsタブから
+  「Nightly demo sync」→「Run workflow」で手動実行すれば即座に同期できる
+  （`workflow_dispatch`）
+
+Deploy Hook URLは`motionimagingjp/SCAD-Beauty`リポジトリのSecrets
+（`HOOK_MIRAI_DEV_CHAT` / `HOOK_MIRAI_DEV_BEAUTY` / `HOOK_MIRAI_DEV_SOLO` /
+`HOOK_MIRAI_DEV_APPS`）に登録する。各Vercelプロジェクトの
+Settings → Git → Deploy Hooks で作成したURL（`main`ブランチ向け）を
+そのまま貼る。ここに置くワークフローは1本で4プロジェクト分をまとめて
+処理するため、SCADやscad-soloリポジトリ側には何も追加しなくてよい。
