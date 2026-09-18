@@ -248,9 +248,10 @@ SCAD-Beautyだけビルド工程を持たない静的HTMLのため、環境変�
 済み）。コード側（`main`を共有する構成）は変更していない。
 
 デモへの反映は以下の2通り:
-- **夜間の自動同期**: `SCAD-Beauty/.github/workflows/nightly-demo-sync.yml`
-  が毎晩JST 3:00に4つのVercel Deploy Hookをまとめて叩き、その時点の
-  `main`の内容でデプロイする
+- **定時の自動同期**: `SCAD-Beauty/.github/workflows/nightly-demo-sync.yml`
+  が1日3回（JST 3:00・8:30・12:00）、4つのVercel Deploy Hookをまとめて
+  叩き、その時点の`main`の内容でデプロイする。軽いビルドを起動するだけの
+  処理なので回数を増やしても負荷・コストは無視できる範囲
 - **オンデマンド同期**: GitHubの当該リポジトリのActionsタブから
   「Nightly demo sync」→「Run workflow」で手動実行すれば即座に同期できる
   （`workflow_dispatch`）

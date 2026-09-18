@@ -4,7 +4,9 @@ name: Nightly demo sync
 # (各Vercelプロジェクト側の Ignored Build Step を exit 0 に設定)。
 # その代わり、このワークフローが Deploy Hook を叩いてデプロイを起動する。
 #
-# - schedule: 毎晩まとめて自動同期
+# - schedule: 1日3回(JST 3:00 / 8:30 / 12:00)まとめて自動同期。
+#   4プロジェクト分の軽いビルドをcurlで起動するだけなので、
+#   この回数でも負荷・コストとも無視できるレベル
 # - workflow_dispatch: GitHubのActionsタブから手動実行(オンデマンド同期用)
 #
 # 4つのVercelプロジェクト(mirai-dev-chat/beauty/solo/apps)それぞれの
@@ -17,7 +19,9 @@ name: Nightly demo sync
 
 on:
   schedule:
-    - cron: '0 18 * * *' # UTC 18:00 = JST 3:00
+    - cron: '0 18 * * *'  # UTC 18:00 = JST 3:00
+    - cron: '30 23 * * *' # UTC 23:30 = JST 8:30
+    - cron: '0 3 * * *'   # UTC 3:00  = JST 12:00
   workflow_dispatch: {}
 
 jobs:
