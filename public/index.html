@@ -190,6 +190,7 @@
     background:var(--surface);
     border-bottom:1px solid var(--line);
     transition:background .25s ease;
+    position:relative;
   }
   .brand-mark{
     width:34px;height:34px;border-radius:10px;
@@ -723,8 +724,26 @@
   .embed-mode .phone{width:100%; height:100vh; max-height:100vh; max-width:none; border-radius:0;}
   .embed-mode .notch{display:none;}
   .embed-mode .statusbar{display:none;}
-  .embed-mode #appHeader{display:none;}
   .embed-mode #tabbar{display:none;}
+  /* 埋め込み時もヘッダーは表示したままにする（SCAD CHAT側の指定）。
+     下部タブバーの代わりに、ヘッダー内のプルダウンでヘア/ファッションのみ切り替える。 */
+  .embed-mode #headerText{cursor:pointer;}
+  .embed-mode #headerAppChevron{display:inline; margin-left:3px; font-size:0.75em; color:var(--ink-faint);}
+  .embed-mode .header-icons{gap:4px;}
+
+  .embed-tab-menu{
+    position:absolute; top:100%; left:14px; right:70px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 10px 26px -10px rgba(0,0,0,.3); overflow:hidden; z-index:40;
+  }
+  .embed-tab-menu[hidden]{display:none;}
+  .embed-tab-menu button{
+    width:100%; display:flex; align-items:center; gap:8px; padding:10px 12px;
+    border:none; background:transparent; cursor:pointer; font-family:inherit; text-align:left;
+    color:var(--ink); font-size:13px; font-weight:700;
+  }
+  .embed-tab-menu button svg{width:18px; height:18px; flex-shrink:0;}
+  .embed-tab-menu button.active{background:var(--tab-accent-soft, var(--accent-hair-soft));}
 
   /* ---- PWA「ホーム画面に追加」促しバナー ---- */
   .pwa-install-prompt{
@@ -811,10 +830,11 @@
       <div class="statusbar"></div>
       <header class="app-header" id="appHeader">
         <div class="brand-mark" id="brandMark">髪</div>
-        <div class="header-text">
+        <div class="header-text" id="headerText">
           <div class="header-mode" id="headerMode">スクアド ヘアスタイル</div>
-          <div class="header-app" id="headerApp">ヘアアドバイザー</div>
+          <div class="header-app" id="headerApp">ヘアアドバイザー<span id="headerAppChevron" hidden>▾</span></div>
         </div>
+        <div class="embed-tab-menu" id="embedTabMenu" hidden></div>
         <div class="header-icons">
           <button class="icon-btn" id="karteBtn" aria-label="カルテ">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h8l3 3v15H7z"/><path d="M15 3v3h3M9 12h6M9 16h6M9 8h3"/></svg>
@@ -2260,6 +2280,38 @@
   // ヘッダーアイコンの配線（カルテ／通知／このアプリについて）
   byId("karteBtn").addEventListener("click", function(){ state.tab = "order"; state.seenOrderBadge = true; saveState(); render(); });
   byId("infoBtn").addEventListener("click", function(){ state.tab = "about"; render(); });
+
+  // 埋め込みモード限定：ヘッダーのタップでヘア／ファッションのみを選べる簡易プルダウン
+  // （下部タブバーは埋め込み時に隠しているため、この2つだけの切替導線として機能する）
+  var EMBED_SWITCHABLE_TABS = ["hair", "fashion"];
+  function closeEmbedTabMenu(){ byId("embedTabMenu").hidden = true; }
+  function toggleEmbedTabMenu(){
+    var menu = byId("embedTabMenu");
+    if(!menu.hidden){ closeEmbedTabMenu(); return; }
+    menu.innerHTML = "";
+    EMBED_SWITCHABLE_TABS.forEach(function(id){
+      var t = tabInfo(id);
+      var btn = el("button", state.tab === id ? "active" : "");
+      btn.innerHTML = ICONS[id] + "<span>" + t.app + "</span>";
+      btn.addEventListener("click", function(){
+        state.tab = id;
+        saveState();
+        closeEmbedTabMenu();
+        render();
+      });
+      menu.appendChild(btn);
+    });
+    menu.hidden = false;
+  }
+  if(EMBED_MODE){
+    byId("headerText").addEventListener("click", toggleEmbedTabMenu);
+    document.addEventListener("click", function(e){
+      var menu = byId("embedTabMenu");
+      if(menu.hidden) return;
+      if(menu.contains(e.target) || byId("headerText").contains(e.target)) return;
+      closeEmbedTabMenu();
+    });
+  }
 
   /* =========================================================
      8. ファッションアドバイザー
