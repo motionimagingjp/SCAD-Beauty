@@ -716,6 +716,16 @@
     .notch{display:none;}
   }
 
+  /* ---------- 埋め込みモード（SCAD CHATのiframeから開いた場合） ---------- */
+  .embed-mode .page{padding:0; min-height:100vh;}
+  .embed-mode .page-title, .embed-mode .page-eyebrow{display:none;}
+  .embed-mode .frame-shell{border-radius:0; padding:0; box-shadow:none; width:100%;}
+  .embed-mode .phone{width:100%; height:100vh; max-height:100vh; max-width:none; border-radius:0;}
+  .embed-mode .notch{display:none;}
+  .embed-mode .statusbar{display:none;}
+  .embed-mode #appHeader{display:none;}
+  .embed-mode #tabbar{display:none;}
+
   /* ---- PWA「ホーム画面に追加」促しバナー ---- */
   .pwa-install-prompt{
     position:fixed;
@@ -938,6 +948,19 @@
     if (appleTitle) appleTitle.setAttribute("content", BRAND.appName);
   }
 
+  /* ---------------------------------------------------------
+     SCAD CHATからのiframe埋め込みモード（?embed=1&tab=fashion）。
+     自前のヘッダー・タブバー・端末フレームを隠し、指定タブで開始する。
+     SCAD側のタブバーが唯一のナビゲーションになるよう、ここでは
+     ナビゲーションUIを二重に出さないことが目的。
+  --------------------------------------------------------- */
+  var EMBED_PARAMS = new URLSearchParams(location.search);
+  var EMBED_MODE = EMBED_PARAMS.get("embed") === "1";
+  var EMBED_TAB = EMBED_PARAMS.get("tab");
+  if (EMBED_MODE) {
+    document.documentElement.classList.add("embed-mode");
+  }
+
   "use strict";
 
   /* =========================================================
@@ -1071,16 +1094,20 @@
         location:null, cuisine:null, budgetLabel:null, budgetNote:null, extraNote:null
       }
     };
+    // アクセスのたびに初期画面はヘアアドバイザーにする（前回タブは記憶しない）。
+    // 埋め込みモードでは、SCAD側が指定したタブ（?tab=fashion 等）を優先する。
+    var embedTabValid = EMBED_MODE && EMBED_TAB && TABS.some(function(t){ return t.id === EMBED_TAB; });
+    var initialTab = embedTabValid ? EMBED_TAB : "hair";
     try{
       var raw = localStorage.getItem("hairRecipeState_v1");
       if(raw){
         var parsed = JSON.parse(raw);
         var merged = Object.assign(fallback, parsed);
-        // アクセスのたびに初期画面はヘアアドバイザーにする（前回タブは記憶しない）
-        merged.tab = "hair";
+        merged.tab = initialTab;
         return merged;
       }
     }catch(e){ /* storage unavailable: use fallback silently */ }
+    fallback.tab = initialTab;
     return fallback;
   }
   function saveState(){
@@ -3339,6 +3366,9 @@
      PWA「ホーム画面に追加」促しバナー(iOS Safariのみ)。
      アプリ本体の render() とは独立させ、byId 等のスコープは共有しない。
   --------------------------------------------------------- */
+  // SCAD CHATのiframeに埋め込まれている場合は、単体PWA化を促す意味がないため出さない
+  if (document.documentElement.classList.contains("embed-mode")) return;
+
   var DISMISS_KEY = "pwa_prompt_dismiss_until";
   var SHOW_DELAY_MS = 1500;
   var LATER_MS = 7 * 24 * 60 * 60 * 1000;
