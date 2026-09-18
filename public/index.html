@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>スクアド</title>
+<title>イロナビ</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="スクアド">
+<meta name="apple-mobile-web-app-title" content="イロナビ">
 <meta name="theme-color" content="#a3415a">
 <!--
   og:image / twitter:image はブランド名を含まない中立デザイン(public/ogp-image.png)。
@@ -798,7 +798,7 @@
       <header class="app-header" id="appHeader">
         <div class="brand-mark" id="brandMark">髪</div>
         <div class="header-text" id="headerText">
-          <div class="header-mode" id="headerMode">スクアド ヘアスタイル</div>
+          <div class="header-mode" id="headerMode">イロナビ ヘアスタイル</div>
           <div class="header-app" id="headerApp">ヘアアドバイザー</div>
         </div>
         <div class="header-icons">
@@ -916,12 +916,12 @@
         ]
       }
     : {
-        appName: "スクアド",
+        appName: "イロナビ",
         shareUrl: "https://scad-beauty.vercel.app/",
         chatUrl: "https://scad-chat.vercel.app/",
         chatLabel: "SCAD CHAT",
-        selfLabel: "SCAD BEAUTY（このアプリ）",
-        seriesLabel: "SCADシリーズ",
+        selfLabel: "イロナビ（このアプリ）",
+        seriesLabel: "Motion Imaging Lab",
         sns: [
           { label: "Instagram", icon: "instagram", url: "https://instagram.com/" },
           { label: "X",         icon: "x",         url: "https://x.com/" }
@@ -953,9 +953,9 @@
      0. データ定義
   ========================================================= */
   var TABS = [
-    { id:"hair",       label:"ヘア",         accent:"--accent-hair",       accentSoft:"--accent-hair-soft",       app:"ヘアアドバイザー", mode:"スクアド ヘアスタイル", mark:"髪" },
-    { id:"fashion",    label:"ファッション", accent:"--accent-fashion",    accentSoft:"--accent-fashion-soft",    app:"ファッションアドバイザー", mode:"スクアド ファッション",      mark:"服" },
-    { id:"restaurant", label:"レストラン",   accent:"--accent-restaurant", accentSoft:"--accent-restaurant-soft", app:"デート店アドバイザー",     mode:"スクアド レストラン",   mark:"店" },
+    { id:"hair",       label:"ヘア",         accent:"--accent-hair",       accentSoft:"--accent-hair-soft",       app:"ヘアアドバイザー", mode:"イロナビ ヘアスタイル", mark:"髪" },
+    { id:"fashion",    label:"ファッション", accent:"--accent-fashion",    accentSoft:"--accent-fashion-soft",    app:"ファッションアドバイザー", mode:"イロナビ ファッション",      mark:"服" },
+    { id:"restaurant", label:"レストラン",   accent:"--accent-restaurant", accentSoft:"--accent-restaurant-soft", app:"デート店アドバイザー",     mode:"イロナビ レストラン",   mark:"店" },
     // 「オーダー」はボトムタブから外し、ヘッダーのカルテアイコンから開く導線に変更（ヘア専用に見えないようにするため）
     { id:"order",      label:"カルテ",       accent:"--accent-order",      accentSoft:"--accent-order-soft",      app:"オーダーシート",   mode:"ORDER SHEET",  mark:"票" },
     { id:"about",      label:"このアプリについて", accent:"--accent-order", accentSoft:"--accent-order-soft",      app:"このアプリについて", mode:"ABOUT",       mark:"i" }
@@ -1760,7 +1760,7 @@
       actions.appendChild(b2);
       var shareBtn = el("button","chip","📤 シェア");
       shareBtn.addEventListener("click", function(){
-        shareResult("スクアド ヘアスタイル", "「"+style.name+"」を見つけました！\n"+style.sub);
+        shareResult("イロナビ ヘアスタイル", "「"+style.name+"」を見つけました！\n"+style.sub);
       });
       actions.appendChild(shareBtn);
       confirmWrap.appendChild(actions);
@@ -1904,7 +1904,7 @@
       dcopyBtn.addEventListener("click", function(){ copyFashionText(entry.rawText); });
       dbtnRow.appendChild(dcopyBtn);
       var dshareBtn = el("button","mini-btn","📤 シェア");
-      dshareBtn.addEventListener("click", function(){ shareResult("スクアド ファッション", entry.rawText); });
+      dshareBtn.addEventListener("click", function(){ shareResult("イロナビ ファッション", entry.rawText); });
       dbtnRow.appendChild(dshareBtn);
       var restartBtn = el("button","mini-btn","🔁 別の相談をする");
       restartBtn.addEventListener("click", function(){
@@ -2006,7 +2006,7 @@
         actionsRow.appendChild(mapLink);
         var spotShareBtn = el("button","mini-btn","📤 シェア");
         spotShareBtn.addEventListener("click", function(){
-          shareResult("スクアド レストラン", spot.name+"（"+(spot.area||"")+"）\n"+(spot.desc||""));
+          shareResult("イロナビ レストラン", spot.name+"（"+(spot.area||"")+"）\n"+(spot.desc||""));
         });
         actionsRow.appendChild(spotShareBtn);
         body.appendChild(actionsRow);
@@ -2348,7 +2348,7 @@
   function ensureFashionGreeting(){
     if(!state.fashionChat.started){
       state.fashionChat.started = true;
-      pushFashion({ type:"ai", text:"スクアドファッションへようこそ！\n相談内容を入力してください。" });
+      pushFashion({ type:"ai", text:"イロナビファッションへようこそ！\n相談内容を入力してください。" });
       pushFashion({ type:"fashion-mode-choice" });
     }
   }
@@ -3244,7 +3244,7 @@
     // 🔧 差し替えポイント: 実際のお名前・写真に置き換えてください
     tagline: "恋活・婚活中のあなたの「似合う」を、後押しします。",
     story: "恋活・婚活の現場を見てきた中で、中身は素敵なのに、髪型やコーディネートで第一印象を損してしまっている方を何人も見てきました。美容師さんやスタイリストに相談する前の「予習」として、気軽に使ってもらえたらと思い、個人でこのアプリを開発しています。",
-    appIntro: "スクアドは、スクリーンショットや写真をアップロードするだけでAIがアドバイスをくれる、恋活・婚活世代のためのビューティー・ライフスタイルアシスタントです。",
+    appIntro: "イロナビは、スクリーンショットや写真をアップロードするだけでAIがアドバイスをくれる、恋活・婚活世代のためのビューティー・ライフスタイルアシスタントです。",
     appFeatures: [
       { icon:"hair",       label:"ヘア",       desc:"顔型に似合う髪型をAIが診断" },
       { icon:"fashion",    label:"ファッション", desc:"今日のコーデを色・靴までまるごとチェック" },
