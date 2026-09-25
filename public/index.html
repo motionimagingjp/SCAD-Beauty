@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>スクアド</title>
+<title>イロナビ</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="スクアド">
+<meta name="apple-mobile-web-app-title" content="イロナビ">
 <meta name="theme-color" content="#a3415a">
 <!--
   og:image / twitter:image はブランド名を含まない中立デザイン(public/ogp-image.png)。
@@ -905,27 +905,12 @@
     ? {
         appName: "MIRAI-Dev-Beauty",
         shareUrl: "https://mirai-dev-beauty.vercel.app/",
-        chatUrl: "https://mirai-dev-chat.vercel.app/",
-        chatLabel: "MIRAI-Dev-Chat",
-        selfLabel: "MIRAI-Dev-Beauty（このアプリ）",
         seriesLabel: "MIRAI-Dev-Appsシリーズ",
-        // url が null のSNSはリンクを張らず、アイコンの見た目だけ残す
-        sns: [
-          { label: "Instagram", icon: "instagram", url: null },
-          { label: "X",         icon: "x",         url: null }
-        ]
       }
     : {
-        appName: "スクアド",
+        appName: "イロナビ",
         shareUrl: "https://scad-beauty.vercel.app/",
-        chatUrl: "https://scad-chat.vercel.app/",
-        chatLabel: "SCAD CHAT",
-        selfLabel: "SCAD BEAUTY（このアプリ）",
         seriesLabel: "SCADシリーズ",
-        sns: [
-          { label: "Instagram", icon: "instagram", url: "https://instagram.com/" },
-          { label: "X",         icon: "x",         url: "https://x.com/" }
-        ]
       };
 
   if (IS_DEMO) {
@@ -933,6 +918,41 @@
     var appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
     if (appleTitle) appleTitle.setAttribute("content", BRAND.appName);
   }
+
+  /* ---------------------------------------------------------
+     MOTION IMAGINGシリーズ共通の「私について」「アプリ一覧」
+     「お問い合わせ・SNS」データ。実体はmotionimagingリポジトリで
+     管理しており、アプリ名や紹介文の変更はそちら側だけで完結する。
+     このアプリはビルド工程を持たない静的HTMLのため、常にブラウザ側で
+     fetchする。到達できない場合は下記フォールバックのまま表示する。
+  --------------------------------------------------------- */
+  var SHARED_ABOUT_URL = "https://motionimaging.vercel.app/api/shared-about";
+  var sharedAbout = {
+    me: {
+      name: "はじめまして",
+      text: "空いた時間で「あったら便利・楽しい」と思ったWebアプリを、企画からリリースまで一人で手がけています。",
+    },
+    apps: [
+      { id: "sukuado", emoji: "💬", name: "SCAD CHAT", sub: "恋活・婚活AIチャット", prodUrl: "https://scad-chat.vercel.app", demoUrl: "https://mirai-dev-chat.vercel.app" },
+      { id: "beauty", emoji: "✂️", name: "イロナビ", sub: "パーソナルカラー診断", prodUrl: "https://scad-beauty.vercel.app", demoUrl: "https://mirai-dev-beauty.vercel.app" },
+      { id: "solo", emoji: "🍶", name: "ヨイナビ", sub: "今夜の店探し", prodUrl: "https://scad-solo.vercel.app", demoUrl: "https://mirai-dev-solo.vercel.app" },
+      { id: "partyconnect", emoji: "🎉", name: "SCADコネクト", sub: "街コン運営サポートシステム", prodUrl: "https://scad-partyconnect.vercel.app/" },
+      { id: "migoron", emoji: "🌸", name: "ミゴロンナビ", sub: "花見・花スポット検索", prodUrl: "https://motionimaging.vercel.app/migoron" }
+    ],
+    sns: [
+      { label: "Instagram", icon: "instagram", url: "https://www.instagram.com/motion.imaging/" },
+      { label: "X", icon: "x", url: "https://x.com/motion_imaging" }
+    ]
+  };
+  fetch(SHARED_ABOUT_URL).then(function(res){
+    if(!res.ok) throw new Error(res.status);
+    return res.json();
+  }).then(function(json){
+    sharedAbout = json;
+    if(state.tab === "about") render();
+  }).catch(function(){
+    // フォールバックのまま表示を継続する
+  });
 
   /* ---------------------------------------------------------
      SCAD CHATからのiframe埋め込みモード（?embed=1&tab=fashion）。
@@ -3240,25 +3260,17 @@
   var APP_ABOUT = {
     avatarInitial: "J",
     avatarImage: "profile-avatar.jpg", // 🔧 差し替えポイント: public/直下の画像ファイル名。無ければavatarInitialを表示
-    name: "はじめまして",
     // 🔧 差し替えポイント: 実際のお名前・写真に置き換えてください
     tagline: "恋活・婚活中のあなたの「似合う」を、後押しします。",
-    story: "恋活・婚活の現場を見てきた中で、中身は素敵なのに、髪型やコーディネートで第一印象を損してしまっている方を何人も見てきました。美容師さんやスタイリストに相談する前の「予習」として、気軽に使ってもらえたらと思い、個人でこのアプリを開発しています。",
-    appIntro: "スクアドは、スクリーンショットや写真をアップロードするだけでAIがアドバイスをくれる、恋活・婚活世代のためのビューティー・ライフスタイルアシスタントです。",
+    appIntro: "イロナビは、顔写真をアップロードするだけでAIがパーソナルカラーを診断し、似合う色を教えてくれる、恋活・婚活世代のためのビューティー・ライフスタイルアシスタントです。",
     appFeatures: [
       { icon:"hair",       label:"ヘア",       desc:"顔型に似合う髪型をAIが診断" },
       { icon:"fashion",    label:"ファッション", desc:"今日のコーデを色・靴までまるごとチェック" },
       { icon:"restaurant", label:"レストラン",  desc:"初デートにぴったりのお店をAIが提案" }
     ],
-    dataNote: "アップロードした写真は、診断のために外部のAIサービスへ一時的に送信されるのみで、当方のサーバーに保存されることはありません。診断結果やメモなどのデータも、すべてこの端末（ブラウザ）内にのみ保存され、外部に共有されることはありません。",
-    seriesApps: [
-      { emoji:"💬", label:"恋活・婚活コミュニケーション", sub:BRAND.chatLabel, kind:"external", url:BRAND.chatUrl },
-      { icon:"hair", label:"ヘアスタイル", sub:BRAND.selfLabel, kind:"tab", tab:"hair" },
-      { icon:"fashion", label:"ファッション", sub:BRAND.selfLabel, kind:"tab", tab:"fashion" },
-      { emoji:"🔜", label:"その他", sub:"現在開発中", kind:"soon" }
-    ],
-    // 🔧 差し替えポイント: 実際のSNSリンクに置き換える場合は BRAND 側を編集する
-    sns: BRAND.sns
+    dataNote: "アップロードした写真は、診断のために外部のAIサービスへ一時的に送信されるのみで、当方のサーバーに保存されることはありません。診断結果やメモなどのデータも、すべてこの端末（ブラウザ）内にのみ保存され、外部に共有されることはありません。"
+    // 「私について」「アプリ一覧」「お問い合わせ・SNS」はMOTION IMAGINGシリーズ共通データ(sharedAbout)を使用。
+    // アプリ名や紹介文の変更はmotionimagingリポジトリ側だけで完結する。
   };
 
   // ヘッダーの「このアプリについて」アイコンを、汎用のiマークから開発者アバターに差し替える
@@ -3273,16 +3285,16 @@
 
     var head = el("div","about-header");
     var avatarHtml = APP_ABOUT.avatarImage
-      ? '<img src="'+APP_ABOUT.avatarImage+'" alt="'+APP_ABOUT.name+'">'
+      ? '<img src="'+APP_ABOUT.avatarImage+'" alt="'+sharedAbout.me.name+'">'
       : APP_ABOUT.avatarInitial;
     head.innerHTML =
       '<div class="about-avatar">'+avatarHtml+'</div>'+
-      '<div><div class="about-name">'+APP_ABOUT.name+'</div><div class="about-tagline">'+APP_ABOUT.tagline+'</div></div>';
+      '<div><div class="about-name">'+sharedAbout.me.name+'</div><div class="about-tagline">'+APP_ABOUT.tagline+'</div></div>';
     screen.appendChild(head);
 
-    // ---- ①開発者について ----
+    // ---- ①私について ----
     screen.appendChild(el("div","section-label","私について"));
-    screen.appendChild(el("div","advice-box", APP_ABOUT.story));
+    screen.appendChild(el("div","advice-box", sharedAbout.me.text));
 
     // ---- ②このアプリについて ----
     screen.appendChild(el("div","section-label","このアプリについて"));
@@ -3307,43 +3319,42 @@
     screen.appendChild(el("div","section-label","個人情報の取り扱いについて"));
     screen.appendChild(el("div","advice-box", APP_ABOUT.dataNote));
 
-    // ---- ④SCADシリーズ（関連アプリ）----
+    // ---- ②アプリ一覧（MOTION IMAGINGシリーズ）----
     screen.appendChild(el("div","section-label",BRAND.seriesLabel));
     var seriesList = el("div","series-list");
-    APP_ABOUT.seriesApps.forEach(function(app){
-      var isSoon = app.kind === "soon";
-      var row;
-      if(app.kind === "external"){
-        row = document.createElement("a");
-        row.href = app.url;
-        row.target = "_blank";
-        row.rel = "noopener noreferrer";
-      }else if(app.kind === "tab"){
-        row = document.createElement("button");
-        row.type = "button";
-        row.addEventListener("click", function(){ state.tab = app.tab; render(); });
-      }else{
-        row = document.createElement("div");
-      }
-      row.className = "series-row" + (isSoon ? " soon" : "");
-      var iconHtml = app.icon ? ICONS[app.icon] : app.emoji;
-      row.innerHTML =
-        '<span class="series-icon">'+iconHtml+'</span>'+
-        '<span class="series-text"><span class="series-label">'+app.label+'</span><span class="series-sub">'+app.sub+'</span></span>'+
-        (isSoon ? '<span class="tag">近日公開</span>' : '<span class="series-arrow">›</span>');
-      seriesList.appendChild(row);
-    });
+    sharedAbout.apps
+      .filter(function(app){ return app.id === "beauty" || !IS_DEMO || app.demoUrl; })
+      .forEach(function(app){
+        var isCurrent = app.id === "beauty";
+        var url = IS_DEMO ? app.demoUrl : app.prodUrl;
+        var row;
+        if(isCurrent){
+          row = document.createElement("div");
+        }else{
+          row = document.createElement("a");
+          row.href = url;
+          row.target = "_blank";
+          row.rel = "noopener noreferrer";
+        }
+        row.className = "series-row" + (isCurrent ? " soon" : "");
+        row.innerHTML =
+          '<span class="series-icon">'+app.emoji+'</span>'+
+          '<span class="series-text"><span class="series-label">'+app.name+'</span><span class="series-sub">'+app.sub+'</span></span>'+
+          (isCurrent ? '<span class="tag">このアプリ</span>' : '<span class="series-arrow">›</span>');
+        seriesList.appendChild(row);
+      });
     screen.appendChild(seriesList);
 
-    // ---- お問い合わせ・SNS ----
+    // ---- ③お問い合わせ・SNS ----
     screen.appendChild(el("div","section-label","お問い合わせ・SNS"));
     var snsRow = el("div","sns-row");
-    APP_ABOUT.sns.forEach(function(s){
-      // url が null のときはリンクを張らず、アイコンの見た目だけを残す
-      var a = document.createElement(s.url ? "a" : "span");
+    sharedAbout.sns.forEach(function(s){
+      // デモ版ではリンクを張らず、アイコンの見た目だけを残す
+      var url = IS_DEMO ? null : s.url;
+      var a = document.createElement(url ? "a" : "span");
       a.className = "sns-btn";
-      if(s.url){
-        a.href = s.url;
+      if(url){
+        a.href = url;
         a.target = "_blank";
         a.rel = "noopener noreferrer";
       }
