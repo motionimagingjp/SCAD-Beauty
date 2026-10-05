@@ -309,7 +309,7 @@ MOTION IMAGINGシリーズ全体の公式SNSとして、Instagram `@motion.imagi
 | | 表示名 | URL |
 |---|---|---|
 | ハブ | MIRAI-Dev-Apps | `mirai-dev-apps.vercel.app` |
-| チャット | MIRAI-Dev-Chat | `mirai-dev-chat.vercel.app` |
+| チャット | AIチャットボット | `mirai-dev-chat.vercel.app` |
 | ビューティー | MIRAI-Dev-Beauty | `mirai-dev-beauty.vercel.app` |
 | ソロ | MIRAI-Dev-Solo | `mirai-dev-solo.vercel.app` |
 
@@ -343,7 +343,8 @@ SCAD-Beautyだけビルド工程を持たない静的HTMLのため、環境変�
   `scad-beauty.vercel.app/profile-avatar.jpg` を参照していたため、
   デモ版では自リポジトリの `public/profile-avatar.jpg` に切り替えている
 - **デモ版では音声機能を出さない。** 予算を消費させないため、サキの「声で話す」ボタンは`IS_DEMO`で非表示、`/api/voice-token`も403を返す
-- **mirai-dev-chat の環境変数は `GEMINI_API_KEY` と `NEXT_PUBLIC_APP_VARIANT` の2つ。** 2026/9/18〜9/30は`GEMINI_API_KEY`が未設定でデモ版チャットが動いていなかった（9/30に修正）
+- **mirai-dev-chat の環境変数は `GEMINI_API_KEY` と `NEXT_PUBLIC_APP_VARIANT` の2つ。** 2026/9/18〜9/30は`GEMINI_API_KEY`が未設定でデモ版チャットが動いていなかった（9/30に修正）。**2026/10/1には`NEXT_PUBLIC_APP_VARIANT=demo`自体が未設定だったことが発覚**（表紙に本番名「スクアド」が表示される不具合として発覚。brand.jsのコード修正は正しくmainにマージ・デプロイ済みで、コミットもREADY状態だったにもかかわらず、この環境変数が無いため`IS_DEMO`が`false`判定になり本番ブランドのままビルドされていた）。環境変数を追加し再デプロイして解消。
+  - **一般的な教訓**: `NEXT_PUBLIC_`接頭辞の環境変数はビルド時にインライン化されるため、(1)値を追加・変更した後は既存のデプロイには反映されず、必ず新しいビルドを走らせる必要がある（Deploy Hookの再実行や`vercel --prod`等）。(2) Vercelプロジェクトを新規作成した際にこの変数の設定自体を忘れると、ソースコードは正しくても見た目は本番のまま、という紛らわしい不具合になる。デモ版が「コードは直したのに直らない」状態になったら、まずVercelダッシュボードの Settings → Environment Variables で`NEXT_PUBLIC_APP_VARIANT=demo`の存在を確認すること
 - **デモ版には `noindex` を付ける。** 本番と検索結果で競合させないため。
   Next.js側は `metadata.robots`、SCAD-Beautyは `vercel.json` の
   `X-Robots-Tag` ヘッダ（ホスト条件付き）で付与している
