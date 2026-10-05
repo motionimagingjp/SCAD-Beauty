@@ -137,10 +137,48 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 - 店舗データは現状デモ（架空）のみ。実店舗投入は未着手（`scripts/import-spots.ts`で投入予定、Gemini+Google検索groundingで候補発掘→人力レビュー→Geocoding→DB投入というフロー設計済み）
 - ABOUTページ（`app/about/page.tsx`）の「私について」「アプリ一覧」「お問い合わせ・SNS」はmotionimaging提供の共通データAPIをサーバーコンポーネントでfetch（`lib/getSharedAbout.ts`、到達できない場合は埋め込みフォールバック）。下記「ABOUTページ共通データ」参照
 - マイページのエコシステムセクション（`lib/data/scadApps.ts`のSCAD_APPS）はABOUTページとは別の仕組みのまま（`BRAND.beautyName`/`chatName`を直接参照）。共通データAPI化はしていない
+- **Googleログイン（リピート施策 Phase 1、2026年10月・PR #31）**：Auth.js v5（`next-auth@beta`）＋Prisma Adapter、セッションはDB方式。設定は`auth.ts`（リポジトリ直下）、ログイン/ログアウトはServer Action（`app/actions/auth.ts`）。**middlewareは使わない**（Edge RuntimeでPrismaが動かないため）。閲覧はログイン不要で、書き込みボタンを押した時だけログインを促す
+- 店舗詳細ページ `/spot/[spotId]`（Phase 1で新設）：ハート（`Favorite`、行きたいリスト）と「行った！」（`Visit`）。ホームの店カードと地図のSpotCardの店名横「詳細 ›」から開く
+- 「行った！」はJSTで同一ユーザー・同一店舗1日1回。`Visit.visitDate`（JSTの"YYYY-MM-DD"、`lib/jst.ts`）の複合unique制約でDB側で保証している
+- マイページ：Googleログイン中は延べ訪問数・訪問店舗数・エリア別件数（`Spot.nearestStation`で集計）・行きたいリスト・行った！履歴を表示
+- `/terms`（利用規約）・`/privacy`（プライバシーポリシー）：Phase 1で新設。**文面はドラフト**（Googleログインで取得する情報・ユーザー投稿の扱いを記載）。Google OAuth同意画面のリンク先にもなっている
+
+## リピート施策（引き継ぎ書のPhase 1〜4）
+
+- **2種類の来店記録を並存させている**（オーナー決定）：
+  - `VisitLog`：「今夜はここにする」で自動記録（従来通り、1日何回でも）。ランク・実績・Threadsシェアに使う。ログイン中は`User.id`、未ログインは従来の`x-user-id`ヘッダ（`demo-user`）で記録（`lib/auth.ts`の`getUserIdFromRequest`）
+  - `Visit`：店舗詳細の「行った！」で手動記録（1日1回）。マイページの集計に使う
+- ログイン導入前の`demo-user`名義の来店ログ・実績はそのまま残し、実ユーザーには引き継がない（オーナー決定）
+- 書き込みAPI（`/api/favorites`・`/api/visits`）は`getLoggedInUserId()`でサーバー側のログイン確認をしている（未ログインは401）
+- マイグレーションは**追加のみ**（新規テーブル作成だけ）。本番は`prisma migrate deploy`。`migrate reset`・`db push --force-reset`は禁止
+- **Phase 2は「簡易版」から着手と決定**：「行った！」済みの店に写真を投稿でき、ホームの店カードに**最新の1枚を大きく**表示する（3枚の小さいサムネイルではなく1枚）。通報・自動非表示・管理画面（`ADMIN_EMAILS`）は後回し
+- Phase 3（24時間店舗ノート）・Phase 4（貢献度ランキング・バッジ・ニックネーム）は未着手
+
+## 認証・環境変数の構成（2026年10月時点）
+
+| 環境変数 | scad-solo | mirai-dev-solo | 備考 |
+|---|---|---|---|
+| `DIRECT_URL` | 全環境 | 全環境（必須） | Neonの直接接続URL（Connection poolingオフ、ホスト名に`-pooler`なし）。ビルドの`prisma migrate deploy`が使う |
+| `AUTH_SECRET` | Production・Preview | Production・Preview | 値は両プロジェクトで別々でよい |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Production・Preview | Production・Preview | Google CloudのOAuthクライアント |
+
+- Google Cloudプロジェクトは**`scad-solo-maps`**（Maps APIキーと同居。地図用APIキーとは別物）。OAuthクライアント名は「ウェブクライアント1」、同意画面は「外部」・本番公開済み
+- **同意画面にロゴを設定しない**。ロゴを入れるとGoogleのブランド審査（数日）が必要になる。ロゴなし＋基本スコープ（名前・メール・アイコン）なら審査不要
+- 承認済みドメインは`scad-solo.vercel.app`・`mirai-dev-solo.vercel.app`（**`vercel.app`単体は登録できない**。パブリックサフィックス扱いのため）
+- リダイレクトURI：本番・デモ・`localhost:3000`・ブランチのプレビュー固定URL（`scad-solo-git-claude-zen-newto-cf0258-motionimagingjps-projects.vercel.app`）の各`/api/auth/callback/google`
+
+## 既知の落とし穴
+
+- **ビルドが `P1002`（`Timed out trying to acquire a postgres advisory lock`）で失敗することがある。** NeonのFreeプランは5分無操作で休止（変更には有料プランが必要）し、起動待ちでマイグレーションのロック取得が10秒を超えるため。NeonのSQL Editorで何か実行して「Active」にしてから、間を置かずにRedeployすれば通る
+- `DIRECT_URL`が無いプロジェクトはビルド冒頭の`P1012: Environment variable not found: DIRECT_URL`で即失敗する（mirai-dev-soloで発生）
+- **Previewでログインを試すときは、ブランチの固定URL（`scad-solo-git-<ブランチ>-...vercel.app`）を使う。** デプロイごとのURLはGoogleのリダイレクトURIに登録していないので通らない。Preview環境に`AUTH_*`が無いと`/api/auth/signin/google`が「Server error（server configuration）」になる
+- 環境変数は**次のビルドから**反映される。変更したらRedeployが必要
+- Vercel MCPはチーム`motionimagingjps-projects`のスコープで403になり、デプロイログを取得できない。ログはオーナーに画面からコピーしてもらう（Build Logs枠のコピーアイコンで全文コピーできる）
+- ビルドログの`旧仮データの削除に失敗しました（spot_demo_ike_meshi ... VisitLog_spotId_fkey）`は既存のseedの警告で、ビルドは止まらない
 
 ## 確定している設計決定
 
-- アイコンはカクテルグラス＋グラスの縁のリップ跡（人物・夜景シルエットなし、シンプル）
+- アイコンはカクテルグラス＋グラスの縁のリップ跡（人物・夜景シルエットなし、シンプル）。ファイルは`app/apple-icon.png`（1024×1024）と`app/icon.svg`
 - 配色はアプリ独自（白ベース×オレンジ）。イロナビの配色には合わせない
 - ゲーム系機能（乾杯タイマー等）はナビに置かず結果画面にのみ表示。本体は未実装（`lib/data/activities.ts`の`ALL_GAMES`）
 
@@ -149,6 +187,8 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 - 実店舗データの本格投入（Phase 0〜2で段階拡大予定、現状未着手）
 - 地図画面の自由入力（AI検索）欄（コンテンツ検討中、未実装）
 - マイページのエコシステムセクションも共通データAPI化するかどうか
+- 利用規約・プライバシーポリシーの正式な文面（現状ドラフト。問い合わせ先・データ削除の手順が未記載）
+- リピート施策の貢献度の配点・バッジの種類と名前・管理者メールアドレス（Phase 2本体〜Phase 4で決める）
 
 ---
 
@@ -338,6 +378,11 @@ SCAD-Beautyだけビルド工程を持たない静的HTMLのため、環境変�
 `lib/brand.ts` で分けている（本番 `demo-user` ／ デモ `mirai-demo-user`）。
 ビルド時の `prisma db seed` は固定IDの `upsert` なので、両プロジェクトが
 同じDBに対して走っても既存データは壊れない。
+
+Googleログイン導入後（2026年10月）は、ログイン中のユーザーは本番・デモで
+同じ`User`テーブルを使う（同じGoogleアカウントなら同じユーザー）。分離されるのは
+未ログイン時の暫定ユーザーIDの記録だけ。mirai-dev-solo にも本番と同じ環境変数
+（`DIRECT_URL`・`AUTH_*`）が必要（上記ヨイナビの「認証・環境変数の構成」参照）。
 
 ## ハブサイト
 
