@@ -290,6 +290,16 @@ MOTION IMAGINGシリーズ全体の公式SNSとして、Instagram `@motion.imagi
 
 ---
 
+# プロモ動画・AIモデル制作メモ（Higgsfield・全アプリ共通・2026年10月）
+
+- **AIモデルは3人：サキ・リオ・ジョンジン**。Higgsfieldの「Elements」に登録済み（`Saki` / `Rio` / `Jongjin-original`）。プロモ画像・動画では`<<<element_id>>>`で呼び出して顔を揃える。ジョンジンは元画像（顔アップ・横顔・全身）から作った`Jongjin-original`を使う（`Jongjin`は派生画像ベースの旧登録なので使わない）
+- **ナレーション声は「サキ＝Ainsley」で固定**（Higgsfieldの`text2speech_v2`・`variant: elevenlabs`・プリセット声。若い女性の声）。今後もサキの声はAinsleyを使う。ジョンジンの声・リオの声は未決定
+- 画像・動画の方針：登場人物は全員笑顔で楽しい雰囲気、**正面ばかりにせず3/4の少し横向きを多く使う**。最後のシーンは全員がカメラを向いて締める。アイドル（モデル）が出る場面は2人だけにせず3人にする
+- 動画は縦9:16。動画の末尾に、YouTube・スクショから来た人が行けるよう小さくQRを入れる（リンクにはUTMを付ける。ヨイナビは`https://scad-solo.vercel.app/?utm_source=promo_short&utm_medium=video&utm_campaign=yoinavi_intro`）
+- Claude Codeのクラウド環境からHiggsfieldの生成ファイルは直接ダウンロードできない（プロキシで403）。動画の合成（QR・ナレーション・結合）はHiggsfieldの`sandbox_exec`（ffmpeg入り）で行い、結果は`media_upload`で戻す
+
+---
+
 # 姉妹リポジトリ
 
 - **motionimagingjp/motionimaging**（Jake個人のハブページ。Migoron本体、スクアードX自動投稿の実装場所。上記ABOUTページ共通データAPIの提供元でもある）: docsフォルダおよび`ai-cto-memory/`に開発ノウハウ・過去プロジェクトの記録を蓄積する運用あり。トップページ（`src/app/page.js`）にミゴロンナビ・SCADコネクトへのリンクカードあり
