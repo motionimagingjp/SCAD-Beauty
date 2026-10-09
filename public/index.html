@@ -1826,10 +1826,20 @@
         '<div style="margin-bottom:8px;">「'+entry.styleName+'」で、あなたの雰囲気を確認できました！</div>'+
         '<img src="'+entry.image+'" alt="AI合成イメージ" style="width:100%;border-radius:10px;display:block;">'+
         (entry.sideImage ? '<div style="margin:10px 0 6px;">横顔はこちら</div><img src="'+entry.sideImage+'" alt="AI合成イメージ（横顔）" style="width:100%;border-radius:10px;display:block;">' : '');
+      compBub.insertAdjacentHTML("beforeend", '<div style="margin-top:8px;font-size:11px;color:#8a8a8a;line-height:1.5;">※AIによるイメージです。実際の仕上がりは髪質・毛量・骨格で変わります。</div>');
       // 生成結果を見たあと、別の髪型でも試せるよう最初の2ボタンをその場に再表示する
       var retryRow = el("div","chip-row");
       retryRow.style.paddingLeft = "0";
       retryRow.style.marginTop = "10px";
+      // 結果にばらつきがあるため、元の写真から入れ直せる「もう一度つくる」を最新の結果にだけ出す（費用のため最大3回まで）
+      var lastCompIdx = -1;
+      state.chat.log.forEach(function(x, i){ if(x.type === "hair-composite-result") lastCompIdx = i; });
+      var canRetryComp = state.chat.log.indexOf(entry) === lastCompIdx && state.pendingCompositeStyle && state.userSelfiePhoto && (state.compositeTries || 0) < 3;
+      if(canRetryComp){
+        var regenBtn = el("button","chip primary","🔄 もう一度つくる（あと"+(3 - (state.compositeTries || 0))+"回）");
+        regenBtn.addEventListener("click", function(){ runHairComposite(state.pendingCompositeStyle, state.userSelfiePhoto); });
+        retryRow.appendChild(regenBtn);
+      }
       var retryWantBtn = el("button","chip primary", "🖼️ なりたい髪型を添付");
       retryWantBtn.addEventListener("click", function(){
         resetHairFlow();
@@ -2209,7 +2219,7 @@
     pushLog({ type:"user", text:"自分に似合うか試す（ヘアマッチング）" });
     state.pendingCompositeStyle = style;
     saveState();
-    pushLog({ type:"ai", text:"自撮り写真をアップしてください。あなたの顔に、選んだ髪型を合成してご確認いただけます。" });
+    pushLog({ type:"ai", text:"自撮り写真をアップしてください。あなたの顔に、選んだ髪型を合成してご確認いただけます。\n\n📸 きれいに仕上がるコツ\n・正面を向いて、首をまっすぐに\n・顔を大きく、髪が顔や耳にかからないように\n・明るく、影の少ない場所で（背景はシンプルだとベスト）" });
     pushLog({ type:"hair-composite-upload-prompt" });
     render();
   }
@@ -2222,6 +2232,7 @@
     }).then(function(resized){
       pushLog({ type:"user", text:"", thumb:resized });
       state.userSelfiePhoto = resized;
+      state.compositeTries = 0;
       saveState();
       var style = state.pendingCompositeStyle;
       if(style) runHairComposite(style, resized);
@@ -2234,6 +2245,7 @@
     // （送られた写真は style.refPhoto に入っている）
     var refPhoto = style.refPhoto ? await cropToAspectOf(style.refPhoto, selfieDataUrl, 1024) : null;
     var useRef = !!refPhoto;
+    state.compositeTries = (state.compositeTries || 0) + 1;
     pushLog({ type:"ai", text: useRef
       ? "送っていただいた見本写真の髪型を、あなたの写真に合成中です…数秒〜十数秒ほどお待ちください。"
       : "AIがあなたの顔に髪型を合成して、正面・横顔の2面図を作成中です…数秒〜十数秒ほどお待ちください。" });
