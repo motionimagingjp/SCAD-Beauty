@@ -9,7 +9,8 @@
 // 見本写真（referenceImage）が付いている場合は、見本の髪型を1枚目の人物に移す方式（正面1枚）で生成する。
 // 髪以外（顔・肌質感・服・背景）は変更しない。2面図より顔の保持精度が高いため、見本がある場合はこちらを優先。
 //
-// リクエストBody: { userFaceImage: "data:image/...;base64,...", styleName: string, styleSub?: string, referenceImage?: "data:image/..." }
+// リクエストBody: { userFaceImage: "data:image/...;base64,...", styleName: string, styleSub?: string, referenceImage?: "data:image/...", view?: "side" }
+// view:"side" のときは userFaceImage に「髪型変更済みの正面写真」を渡す。同じ人物・同じ髪の横顔（右向き）を1枚生成して返す。
 // レスポンス: { image: "data:image/...;base64,..." } または { error: string }
 //
 // 🔧 差し替えポイント：
@@ -22,9 +23,10 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { userFaceImage, styleName, styleSub, referenceImage } = req.body || {};
+  const { userFaceImage, styleName, styleSub, referenceImage, view } = req.body || {};
+  const isSide = view === "side";
 
-  if (!userFaceImage || (!styleName && !referenceImage)) {
+  if (!userFaceImage || (!isSide && !styleName && !referenceImage)) {
     res.status(400).json({ error: "userFaceImage と styleName（または referenceImage）が必要です" });
     return;
   }
@@ -92,6 +94,13 @@ export default async function handler(req, res) {
     "出力は1枚目と同じ画角・同じ縦横比の写真1枚のみ。文字・ロゴ・透かしなし。",
   ].join("\n");
 
+  // 横顔：髪型変更済みの正面写真から、同じ人物・同じ髪の横顔を作る（正面と髪が食い違わないようにする）
+  const sidePrompt = [
+    "1枚目は、髪型を変更済みの人物の正面写真です。同じ人物・同じ髪型（長さ・毛量・毛流れ・髪色・質感すべて同一）を、真横（右向きの横顔）から撮影した写真を生成してください。",
+    "顔立ち・肌の質感・年齢感・服装・背景・ライティングは1枚目と同じにし、髪型だけが1枚目と食い違わないこと。耳・もみあげ・襟足・後頭部のボリュームも自然に描写してください。",
+    "出力は横顔の写真1枚のみ。文字・ロゴ・透かしなし。",
+  ].join("\n");
+
   const prompt = [
     `添付した人物写真の髪型だけを「${styleLabel}」に変更してください。`,
     "顔立ち・肌の色・背景はそのまま保持してください。別人にならないよう、顔のパーツ（目・鼻・口・輪郭）は一切変形させないでください。",
@@ -111,10 +120,10 @@ export default async function handler(req, res) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     const parts = [
-      { text: imageRef ? referencePrompt : prompt },
+      { text: isSide ? sidePrompt : imageRef ? referencePrompt : prompt },
       { inlineData: { mimeType: imageA.mimeType, data: imageA.data } },
     ];
-    if (imageRef) parts.push({ inlineData: { mimeType: imageRef.mimeType, data: imageRef.data } });
+    if (imageRef && !isSide) parts.push({ inlineData: { mimeType: imageRef.mimeType, data: imageRef.data } });
 
     // 画像が返らずテキストだけ返る場合があるため、1回だけ再試行する
     let imagePart = null;

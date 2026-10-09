@@ -1800,7 +1800,8 @@
       var compBub = el("div","bubble ai");
       compBub.innerHTML =
         '<div style="margin-bottom:8px;">「'+entry.styleName+'」で、あなたの雰囲気を確認できました！</div>'+
-        '<img src="'+entry.image+'" alt="AI合成イメージ" style="width:100%;border-radius:10px;display:block;">';
+        '<img src="'+entry.image+'" alt="AI合成イメージ" style="width:100%;border-radius:10px;display:block;">'+
+        (entry.sideImage ? '<div style="margin:10px 0 6px;">横顔はこちら</div><img src="'+entry.sideImage+'" alt="AI合成イメージ（横顔）" style="width:100%;border-radius:10px;display:block;">' : '');
       // 生成結果を見たあと、別の髪型でも試せるよう最初の2ボタンをその場に再表示する
       var retryRow = el("div","chip-row");
       retryRow.style.paddingLeft = "0";
@@ -2228,6 +2229,20 @@
       state.chat.log = state.chat.log.filter(function(x){ return x.type!=="typing"; });
       if(res.ok && data.image){
         pushLog({ type:"hair-composite-result", image:data.image, styleName:style.name });
+        // 見本写真方式は正面1枚なので、続けて横顔も作って同じ吹き出しに追加する
+        if(useRef){
+          var entryRef = state.chat.log[state.chat.log.length-1];
+          render();
+          try{
+            var sideRes = await fetch("/api/generate-hairstyle-composite", {
+              method:"POST",
+              headers:{ "Content-Type":"application/json" },
+              body: JSON.stringify({ userFaceImage: data.image, view:"side" })
+            });
+            var sideData = await sideRes.json().catch(function(){ return {}; });
+            if(sideRes.ok && sideData.image){ entryRef.sideImage = sideData.image; saveState(); }
+          }catch(e){ /* 横顔は失敗しても正面だけ表示する */ }
+        }
       }else{
         console.error("hairstyle composite failed:", res.status, data.error);
         pushLog({ type:"ai", text:"画像の生成に失敗しました。時間をおいて再度お試しください。" });
