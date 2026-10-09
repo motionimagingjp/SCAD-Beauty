@@ -2205,7 +2205,11 @@
   });
 
   async function runHairComposite(style, selfieDataUrl){
-    pushLog({ type:"ai", text:"AIがあなたの顔に髪型を合成して、正面・横顔の2面図を作成中です…数秒〜十数秒ほどお待ちください。" });
+    // 見本写真を送っていた髪型なら、その写真を参照にして合成する（正面1枚）
+    var useRef = !!(state.referenceHairPhoto && state.referenceStyleId === style.id);
+    pushLog({ type:"ai", text: useRef
+      ? "送っていただいた見本写真の髪型を、あなたの写真に合成中です…数秒〜十数秒ほどお待ちください。"
+      : "AIがあなたの顔に髪型を合成して、正面・横顔の2面図を作成中です…数秒〜十数秒ほどお待ちください。" });
     pushLog({ type:"typing" });
     render();
 
@@ -2216,7 +2220,8 @@
         body: JSON.stringify({
           userFaceImage: selfieDataUrl,
           styleName: style.name,
-          styleSub: style.sub
+          styleSub: style.sub,
+          referenceImage: useRef ? state.referenceHairPhoto : undefined
         })
       });
       var data = await res.json().catch(function(){ return {}; });
@@ -2251,6 +2256,12 @@
         pushLog({ type:"confirm", styleId: result.style.id, styleObj: result.style });
         state.selectedStyle = result.style;
         state.diagnosis = { texture:null, crown:null, curl:null };
+        // 送られた見本写真は、あとで「自分に似合うか試す」の合成で髪型の参照に使う
+        resizeImageDataUrl(dataUrl, 768).then(function(ref){
+          state.referenceHairPhoto = ref;
+          state.referenceStyleId = result.style.id;
+          saveState();
+        }).catch(function(){});
         bellHasNote = true;
         saveState();
         render();
