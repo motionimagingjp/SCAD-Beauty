@@ -1178,6 +1178,30 @@
       img.src = dataUrl;
     });
   }
+  // 見本写真を、自撮り写真と同じ縦横比に切り抜く（上寄せ＝頭が写る位置を残す）。
+  // 縦横比が違うまま渡すと、生成結果が見本の縦横比に引っ張られて顔が伸びるため。
+  function cropToAspectOf(refDataUrl, baseDataUrl, maxDim){
+    return new Promise(function(resolve){
+      var base = new Image(), ref = new Image();
+      base.onload = function(){
+        ref.onload = function(){
+          var ar = base.width / base.height;
+          var cw = ref.width, ch = ref.height;
+          if(cw / ch > ar){ cw = Math.round(ch * ar); } else { ch = Math.round(cw / ar); }
+          var sx = Math.round((ref.width - cw) / 2), sy = 0;
+          var scale = Math.min(1, maxDim / Math.max(cw, ch));
+          var canvas = document.createElement("canvas");
+          canvas.width = Math.round(cw * scale); canvas.height = Math.round(ch * scale);
+          canvas.getContext("2d").drawImage(ref, sx, sy, cw, ch, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.92));
+        };
+        ref.onerror = function(){ resolve(refDataUrl); };
+        ref.src = refDataUrl;
+      };
+      base.onerror = function(){ resolve(refDataUrl); };
+      base.src = baseDataUrl;
+    });
+  }
   // クリップボードAPIが使えない環境（モバイルの一部ブラウザ・アプリ内ブラウザ等）向けのフォールバック
   function fallbackCopyText(text){
     try{
@@ -2207,7 +2231,9 @@
 
   async function runHairComposite(style, selfieDataUrl){
     // 見本写真を送っていた髪型なら、その写真を参照にして合成する（正面1枚）
-    var useRef = !!(state.referenceHairPhoto && state.referenceStyleId === style.id);
+    // （送られた写真は style.refPhoto に入っている）
+    var refPhoto = style.refPhoto ? await cropToAspectOf(style.refPhoto, selfieDataUrl, 1024) : null;
+    var useRef = !!refPhoto;
     pushLog({ type:"ai", text: useRef
       ? "送っていただいた見本写真の髪型を、あなたの写真に合成中です…数秒〜十数秒ほどお待ちください。"
       : "AIがあなたの顔に髪型を合成して、正面・横顔の2面図を作成中です…数秒〜十数秒ほどお待ちください。" });
@@ -2222,7 +2248,7 @@
           userFaceImage: selfieDataUrl,
           styleName: style.name,
           styleSub: style.sub,
-          referenceImage: useRef ? state.referenceHairPhoto : undefined
+          referenceImage: useRef ? refPhoto : undefined
         })
       });
       var data = await res.json().catch(function(){ return {}; });
@@ -2271,12 +2297,6 @@
         pushLog({ type:"confirm", styleId: result.style.id, styleObj: result.style });
         state.selectedStyle = result.style;
         state.diagnosis = { texture:null, crown:null, curl:null };
-        // 送られた見本写真は、あとで「自分に似合うか試す」の合成で髪型の参照に使う
-        resizeImageDataUrl(dataUrl, 768).then(function(ref){
-          state.referenceHairPhoto = ref;
-          state.referenceStyleId = result.style.id;
-          saveState();
-        }).catch(function(){});
         bellHasNote = true;
         saveState();
         render();

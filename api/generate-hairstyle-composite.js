@@ -119,10 +119,43 @@ export default async function handler(req, res) {
     const model = "gemini-2.5-flash-image";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
+    // 見本写真の髪を先に文章で言語化し、指示に添える（画像だけだと「長めのウェーブ」など一般的な形に寄りやすいため）
+    let referenceDetail = "";
+    if (imageRef && !isSide) {
+      try {
+        const descRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{
+                role: "user",
+                parts: [
+                  { text: "この写真の人物の「髪型だけ」を、美容師が再現できるよう日本語で簡潔に箇条書きで説明してください。見たままを正確に書き、一般的な髪型に当てはめて推測しないこと。必ず含める項目：全体の長さ（顔まわり・サイド・後ろそれぞれ、耳・あご・襟・肩のどこまで届くか）、分け目（センター／7:3／なし）と前髪、サイド（耳が出ているか・隠れているか）、襟足（短いか）、質感（ストレートか、ウェーブか。ツヤ・束感・濡れ感）、毛量、髪色。顔・服・背景には触れない。見えない部分は「不明」。" },
+                  { inlineData: { mimeType: imageRef.mimeType, data: imageRef.data } },
+                ],
+              }],
+            }),
+          }
+        );
+        if (descRes.ok) {
+          const descData = await descRes.json();
+          referenceDetail = descData?.candidates?.[0]?.content?.parts?.find((p) => p.text)?.text || "";
+        }
+      } catch (e) {
+        console.error("reference description failed:", e);
+      }
+    }
+    const referenceFinal = referenceDetail
+      ? `${referencePrompt}\n【見本の髪型の詳細（必ずこのとおりに再現。これより長く・ボリュームを多くしない）】\n${referenceDetail}`
+      : referencePrompt;
+
     const parts = [
-      { text: isSide ? sidePrompt : imageRef ? referencePrompt : prompt },
+      { text: isSide ? sidePrompt : imageRef ? referenceFinal : prompt },
       { inlineData: { mimeType: imageA.mimeType, data: imageA.data } },
     ];
+    // 見本あり：本人→見本の順で渡す。見本→本人の順にすると、白背景の写真などで人物ごと見本モデルに入れ替わる事故が起きた
     if (imageRef && !isSide) parts.push({ inlineData: { mimeType: imageRef.mimeType, data: imageRef.data } });
 
     // 画像が返らずテキストだけ返る場合があるため、1回だけ再試行する
