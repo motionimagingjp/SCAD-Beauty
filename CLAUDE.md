@@ -454,6 +454,8 @@ MOTION IMAGINGシリーズ全体の公式SNSとして、Instagram `@motion.imagi
 - 音声のトークン数は、Live APIの`usageMetadata`（`promptTokenCount` / `responseTokenCount`）から取る。音声の費用は秒数よりトークン数が正確
 
 ## 運用メモ
+- **2026/10/12にログを入れた。この時点の記録はJake本人の動作確認だけで、実利用者のデータはまだ無い**。傾向や費用の判断は、数日〜10月末まで溜めてから行う
+- チャットはログイン不要で`user_id`が付かないため、**チャットの利用者数は数えられない**（訪問数はVercel Analytics）
 - **音声（Live API）の入力トークンは累計で届く**ので、最大値を採用している
 - 2026/10/12時点の`voice_limits`の実値は**1人1日10回**（1回180秒・全体1日5400秒・同時5）。画面表示の「1日3回まで」と食い違っている可能性があるので、変更時は合わせて直す
 - `reserve_voice_session()`は`authenticated`（匿名ログイン含む）と`service_role`のみEXECUTE可（`anon`には開いていない）。意図どおり
