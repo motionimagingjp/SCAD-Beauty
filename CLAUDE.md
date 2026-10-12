@@ -22,7 +22,7 @@ LINEやマッチングアプリのスクリーンショットを送るだけでA
 - Vercel でホスティング・自動デプロイ
 - Gemini API (gemini-2.5-flash) でAI応答生成（`/api/chat`、サーバー側でのみAPIキーを保持）
 - Gemini Live API（音声対話、`gemini-2.5-flash-native-audio-preview-09-2025`・声 Aoede）。ブラウザはエフェメラルトークンで直接接続
-- Supabase（プロジェクト `scad-chat`、東京、無料プラン）。**現状は音声の利用制限だけに使用**（匿名ログイン＋利用回数の記録）
+- Supabase（プロジェクト `scad-chat`、東京、無料プラン）。**音声の利用制限**（匿名ログイン＋利用回数の記録）と、**利用ログ**（`usage_logs`、トークン数・秒数のみ。下記「利用ログ」節）に使用
 - Open-Meteo（天気予報、APIキー不要）。**無料枠は非商用のみ**。課金・広告を入れて商用化する場合は有料プランか別APIへ切り替える
 
 ## リポジトリ構造の注意点（コード確認済み・2026年10月時点）
@@ -426,6 +426,41 @@ MOTION IMAGINGシリーズ全体の公式SNSとして、Instagram `@motion.imagi
 ### 7. コストの目安（2026年10月時点）
 - Kling：音声なし1.5クレジット／秒。画像（gpt_image_2）は約0.5クレジット。ナレーションは1行0.15クレジット前後
 - 実写風CM1本（6クリップ＋やり直し）で、約50クレジット。**やり直しの大半は、画像段階で気づけたミス**（手の位置・携帯の向き・画面の中身）
+
+---
+
+# 利用ログ（usage_logs）── スクアドで稼働中・他アプリへ順次展開（2026年10月）
+
+利用者数とAPI費用を後から集計するため、Supabase（プロジェクト`scad-chat`、ID `gkmbxihkhdksmbnxgwzm`）の`usage_logs`に**数値だけ**を記録している。集計は管理画面を作らず、Jakeが**Claudeのチャットで「利用状況を教えて」と聞く**運用（ClaudeがSupabaseを読んで答える）。
+
+## 守ること（必須）
+- **本文は絶対に保存しない**（相談内容・スクショ・AIの回答・プロンプトは入れない）。数値とメタデータのみ。プライバシーポリシーの「保存・二次利用しない」と矛盾させないため
+- **費用は保存しない**。トークン数・秒数のみ記録し、単価は集計時に掛ける（単価はGoogleの公式料金ページで確認する）
+- **ログの失敗でユーザーのリクエストを失敗させない**（`try/catch`で握りつぶし、応答後に`waitUntil`で書く）
+- 書き込みはサーバー側のみ、`SUPABASE_SERVICE_ROLE_KEY`（Vercelの環境変数、Sensitive）で行う。**クライアントから書かない。キーをコード・チャット・コミットに出さない**。RLS有効・ポリシーなし＝service_roleだけが読み書きできる
+
+## テーブル `usage_logs`
+`id` / `created_at` / `day`（日本時間の日付、自動）/ `app` / `feature` / `user_id`（無ければnull）/ `model` / `input_tokens` / `output_tokens` / `thoughts_tokens`（Gemini 2.5の思考トークン。出力として課金される）/ `search_queries`（検索グラウンディングの回数。回数課金）/ `audio_seconds`（音声の実利用秒数）/ `voice_session_id`（音声の二重報告防止。ユニーク）/ `status`（`ok` / `error` / `limit`）。集計用に`usage_daily`ビュー（日×アプリ×機能）がある。
+
+- `app`：本番`scad-chat`／デモ`scad-chat-demo`（`NEXT_PUBLIC_APP_VARIANT=demo`で切り替わる。本番・デモは同じSupabaseに書くので、このキーで分ける）
+- `feature`の命名：`chat_saki` / `chat_jay`（のり様）/ `chat_ren`（マネー） / `voice`。他アプリを足すときはこの形（`<機能>_<モード>`）に揃え、ここへ追記する
+- トークン数が`null`＝その呼び出しでGeminiから使用量が届かなかった（`0`＝使っていない、とは区別される）
+
+## 実装（スクアド）
+- `src/lib/logUsage.js`：`logUsage({ feature, model, input_tokens, ... })`の共通関数。**他アプリへはこのファイルをコピーして使う**（`@vercel/functions`の`waitUntil`が必要）
+- `/api/chat`：Geminiを呼ぶたびに使用量を合算し、**1リクエスト1行**（天気ツールの往復・マネーの検索やり直しも合算。採用しなかった回も課金されるため含める）
+- 音声：ブラウザがGeminiに直接つなぐため、サーバーは実利用秒数を知れない。そこで**終了時にブラウザが`/api/voice-end`へ秒数・トークン数を報告**する（`useVoiceSession.js`の`reportUsage`。`pagehide`でも送る）。サーバーはSupabaseのアクセストークンで本人確認し、秒数を予約枠で上限カットする。**タブを閉じる・電波切れで報告が届かないセッションがある**ので、集計時は`voice_sessions`の予約秒数で補完する
+- 上限で拒否した音声は`/api/voice-token`が`status='limit'`で記録する（上限到達の頻度を見るため）
+- 音声のトークン数は、Live APIの`usageMetadata`（`promptTokenCount` / `responseTokenCount`）から取る。音声の費用は秒数よりトークン数が正確
+
+## 運用メモ
+- **音声（Live API）の入力トークンは累計で届く**ので、最大値を採用している
+- 2026/10/12時点の`voice_limits`の実値は**1人1日10回**（1回180秒・全体1日5400秒・同時5）。画面表示の「1日3回まで」と食い違っている可能性があるので、変更時は合わせて直す
+- `reserve_voice_session()`は`authenticated`（匿名ログイン含む）と`service_role`のみEXECUTE可（`anon`には開いていない）。意図どおり
+- Claude Codeのクラウド環境からはLive APIにWebSocketでつないで確認できない（プロキシがキーを差し込まない）。音声の実測は本番・プレビューでJakeに使ってもらう
+- 環境変数の追加後は再デプロイが必要。**デモ（mirai-dev-chat）にも同じ`SUPABASE_SERVICE_ROLE_KEY`が必要**（デモは夜間同期で反映）
+- 未確認：`status='limit'`の実機再現（1人1日10回の超過が必要で手間がかかるため後回し）
+- 他アプリへの展開は**APIを使うアプリから順に**同じ`logUsage()`を入れる（展開順はJakeと相談）。利用者数（訪問数）はVercel Analyticsで見る。SCADコネクトのDBは別プロジェクトで参加者データを持つので、**ログ用テーブルは入れない**（スクアドのSupabaseに集約する）
 
 ---
 
