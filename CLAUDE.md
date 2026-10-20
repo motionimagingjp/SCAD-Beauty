@@ -438,6 +438,7 @@ MOTION IMAGINGシリーズ全体の公式SNSとして、Instagram `@motion.imagi
 - **費用は保存しない**。トークン数・秒数のみ記録し、単価は集計時に掛ける（単価はGoogleの公式料金ページで確認する）
 - **ログの失敗でユーザーのリクエストを失敗させない**（`try/catch`で握りつぶし、応答後に`waitUntil`で書く）
 - 書き込みはサーバー側のみ、`SUPABASE_SERVICE_ROLE_KEY`（Vercelの環境変数、Sensitive）で行う。**クライアントから書かない。キーをコード・チャット・コミットに出さない**。RLS有効・ポリシーなし＝service_roleだけが読み書きできる
+- **Supabaseの新テーブルには明示的なGRANTが必要（2026/10/30〜、既存プロジェクトにも適用）。** `public`に作る新しいテーブルは、同じマイグレーションで`grant`を書かないとData API（supabase-js）が`permission denied`になる。既存テーブルは影響なし。サーバー専用（`usage_logs`など）は`grant select, insert, update, delete on public.<テーブル名> to service_role;`のみ。ブラウザから読むテーブルは`anon`/`authenticated`にも付与する
 
 ## テーブル `usage_logs`
 `id` / `created_at` / `day`（日本時間の日付、自動）/ `app` / `feature` / `user_id`（無ければnull）/ `model` / `input_tokens` / `output_tokens` / `thoughts_tokens`（Gemini 2.5の思考トークン。出力として課金される）/ `search_queries`（検索グラウンディングの回数。回数課金）/ `audio_seconds`（音声の実利用秒数）/ `voice_session_id`（音声の二重報告防止。ユニーク）/ `status`（`ok` / `error` / `limit`）。集計用に`usage_daily`ビュー（日×アプリ×機能）がある。
