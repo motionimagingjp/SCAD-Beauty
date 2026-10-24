@@ -6,6 +6,8 @@
 // 自動的にデモ解析（ランダム表示）へフォールバックする作りになっているため、
 // このファイル側は「うまくいかない時は素直にエラーを返す」だけでよい。
 
+import { validateBody } from "./_validate.js";
+
 const GEMINI_MODEL = "gemini-flash-latest";
 
 // フロント側（index.html）が選択肢として使っているタグと完全に一致させる。
@@ -105,6 +107,13 @@ ${TREND_STYLE_REFERENCE}
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // 大きすぎる入力・想定外の画像形式は先に断る
+  const invalid = validateBody(req.body, { imageFields: ["imageBase64"], mimeField: "mimeType" });
+  if (invalid) {
+    res.status(400).json({ error: invalid });
+    return;
   }
 
   const apiKey = process.env.GEMINI_API_KEY;

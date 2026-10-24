@@ -1128,6 +1128,12 @@
   ========================================================= */
   function sleep(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
   function byId(id){ return document.getElementById(id); }
+  // AIや外部APIから届いた文字列をHTMLに入れる前にエスケープする（XSS対策）
+  function escapeHtml(v){
+    return String(v == null ? "" : v).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
   function el(tag, cls, html){
     var e = document.createElement(tag);
     if(cls) e.className = cls;
@@ -1271,11 +1277,11 @@
     // 「なりたい髪型」写真の解析結果は、本人がアップロードした参考写真をそのまま表示する
     // （分析結果が正しいかを本人が一目で確認できるようにするため）
     if(style.refPhoto){
-      return '<div class="duo duo-photo"><img src="'+style.refPhoto+'" alt="'+style.name+'"></div>';
+      return '<div class="duo duo-photo"><img src="'+style.refPhoto+'" alt="'+escapeHtml(style.name)+'"></div>';
     }
     // 実アセットがある場合はそのまま1枚画像（正面+サイド+ヘッダー込み・16:9）を表示。
     if(style.img && IMAGES[style.img]){
-      return '<div class="duo duo-photo"><img src="'+IMAGES[style.img]+'" alt="'+style.name+'"></div>';
+      return '<div class="duo duo-photo"><img src="'+IMAGES[style.img]+'" alt="'+escapeHtml(style.name)+'"></div>';
     }
     if(style.pending){
       return '<div class="duo duo-pending"><span>準備中</span></div>';
@@ -1757,7 +1763,7 @@
         var card = el("button","style-card" + (style.pending ? " is-pending":""));
         var fitTag = (state.faceShape && style.faceShapes && style.faceShapes.indexOf(state.faceShape) !== -1)
           ? '<span class="fit-tag">◎ 似合いやすい</span>' : '';
-        card.innerHTML = duoCardMarkup(style) + fitTag + '<div class="meta"><div class="name">'+style.name+'</div><div class="sub">'+style.sub+'</div></div>';
+        card.innerHTML = duoCardMarkup(style) + fitTag + '<div class="meta"><div class="name">'+escapeHtml(style.name)+'</div><div class="sub">'+escapeHtml(style.sub)+'</div></div>';
         if(style.pending){
           card.disabled = true;
         }else{
@@ -1794,7 +1800,7 @@
       var style = entry.styleObj || styleById(entry.styleId);
       var confirmWrap = el("div","catalog-wrap");
       var card = el("div","full-card");
-      card.innerHTML = duoCardMarkup(style) + '<div class="meta"><div><div class="name">'+style.name+'</div><div class="sub">'+genderLabel(style.gender)+' ・ '+lengthLabel(style.length)+' ・ '+style.sub+'</div></div></div>';
+      card.innerHTML = duoCardMarkup(style) + '<div class="meta"><div><div class="name">'+escapeHtml(style.name)+'</div><div class="sub">'+genderLabel(style.gender)+' ・ '+lengthLabel(style.length)+' ・ '+escapeHtml(style.sub)+'</div></div></div>';
       confirmWrap.appendChild(card);
       var actions = el("div","chip-row");
       actions.style.paddingLeft = "0";
@@ -2042,10 +2048,10 @@
         swatch.innerHTML = ICONS.restaurant;
         card.appendChild(swatch);
         var body = el("div","body");
-        var tipsHtml = (spot.dateTips||[]).map(function(t){ return '<div class="tag" style="display:block;margin-top:4px;">💡 '+t+'</div>'; }).join('');
+        var tipsHtml = (spot.dateTips||[]).map(function(t){ return '<div class="tag" style="display:block;margin-top:4px;">💡 '+escapeHtml(t)+'</div>'; }).join('');
         body.innerHTML =
-          '<div class="title-row"><span class="title">'+spot.name+'</span><span style="font-size:11px;color:var(--ink-faint);">'+(spot.area||"")+'</span></div>'+
-          '<div class="desc">'+(spot.desc||"")+'</div>'+
+          '<div class="title-row"><span class="title">'+escapeHtml(spot.name)+'</span><span style="font-size:11px;color:var(--ink-faint);">'+escapeHtml(spot.area||"")+'</span></div>'+
+          '<div class="desc">'+escapeHtml(spot.desc||"")+'</div>'+
           tipsHtml;
         var actionsRow = el("div","");
         actionsRow.style.display = "flex";
@@ -3205,7 +3211,7 @@
     screen.appendChild(head);
 
     var mainCard = el("div","full-card");
-    mainCard.innerHTML = duoCardMarkup(style) + '<div class="meta"><div><div class="name">'+style.name+'</div><div class="sub">'+genderLabel(style.gender)+' ・ '+lengthLabel(style.length)+'</div></div></div>';
+    mainCard.innerHTML = duoCardMarkup(style) + '<div class="meta"><div><div class="name">'+escapeHtml(style.name)+'</div><div class="sub">'+genderLabel(style.gender)+' ・ '+lengthLabel(style.length)+'</div></div></div>';
     screen.appendChild(mainCard);
 
     var diagGrid = el("div","diag-grid");
@@ -3398,8 +3404,8 @@
         }
         row.className = "series-row" + (isCurrent ? " soon" : "");
         row.innerHTML =
-          '<span class="series-icon">'+app.emoji+'</span>'+
-          '<span class="series-text"><span class="series-label">'+app.name+'</span><span class="series-sub">'+app.sub+'</span></span>'+
+          '<span class="series-icon">'+escapeHtml(app.emoji)+'</span>'+
+          '<span class="series-text"><span class="series-label">'+escapeHtml(app.name)+'</span><span class="series-sub">'+escapeHtml(app.sub)+'</span></span>'+
           (isCurrent ? '<span class="tag">このアプリ</span>' : '<span class="series-arrow">›</span>');
         seriesList.appendChild(row);
       });
