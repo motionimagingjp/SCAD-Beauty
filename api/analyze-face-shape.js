@@ -8,11 +8,20 @@
 // 注意: APIキーはこのサーバー側の環境変数としてのみ保持し、
 //       フロントエンドのコードには絶対に埋め込まないこと。
 
+import { validateBody } from "./_validate.js";
+
 const FACE_SHAPE_IDS = ["oval", "round", "oblong", "square", "triangle", "heart"];
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  // 大きすぎる入力・想定外の画像形式は先に断る
+  const invalid = validateBody(req.body, { imageFields: ["imageBase64"], mimeField: "mimeType" });
+  if (invalid) {
+    res.status(400).json({ error: invalid });
     return;
   }
 

@@ -17,9 +17,18 @@
 //  - 画像生成に対応したモデル名は、実際に利用可能なGemini APIのモデル一覧に合わせて調整してください
 //  - レスポンスの構造（candidates[0].content.parts）はAPIのバージョンにより変わる可能性があります
 
+import { validateBody } from "./_validate.js";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  // 大きすぎる入力・想定外の画像形式は先に断る
+  const invalid = validateBody(req.body, { imageFields: ["userFaceImage", "referenceImage"] });
+  if (invalid) {
+    res.status(400).json({ error: invalid });
     return;
   }
 

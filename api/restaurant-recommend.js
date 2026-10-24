@@ -15,9 +15,18 @@
 //
 // 注意: APIキーはこのサーバー側の環境変数としてのみ保持し、フロントエンドには埋め込まないこと。
 
+import { validateBody } from "./_validate.js";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  // 大きすぎる入力・想定外の画像形式は先に断る
+  const invalid = validateBody(req.body, {});
+  if (invalid) {
+    res.status(400).json({ error: invalid });
     return;
   }
 
