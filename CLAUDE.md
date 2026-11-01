@@ -253,7 +253,7 @@ Jake（写真家・個人開発者）のアプリ群（スクアド／イロナ�
 
 ## 守るべき方針（重要）
 
-1. **AI生成の人物・風景画像を使わない**。写真は本人（Jake）撮影の実写のみ。**例外：音楽ページのJAKE SOLANO・VERT5Xの2枚**（`public/images/music/`、オーナー了承済み・2026年10月）。どちらも「AI生成」と画面に明記する
+1. **AI生成の人物・風景画像を使わない**。写真は本人（Jake）撮影の実写のみ。**例外：音楽ページのJAKE SOLANO・澄名凜奈・VERT5Xの3枚**（`public/images/music/`、オーナー了承済み・2026年10月）。どちらも「AI生成」と画面に明記する
 2. **顔は出さない**。名前のみ（JAKE SOLANOの画像はAI合成で、本人の顔とは違うためオーナー了承済み）
 3. 「AIエンジニア」という肩書きを強調しない。「写真を撮ってきた人間がAIを相棒に作っている」という見せ方
 4. **手動更新が前提の機能は作らない**（Jakeは運用に時間を割けない）
@@ -289,9 +289,11 @@ Jakeが`public/images/apps/{sukuado,beauty,solo}.jpg`（各アプリの実際の
 ## 2026年10月の更新（音楽ページ・AI動画・セキュリティ）
 
 - **トップの並び**：ヒーロー → アプリ → AIでつくる動画（`#video`）→ 音楽（短い紹介カード2枚、`/music`へ誘導）→ About → 写真。詰まって見える（ビジー）とのフィードバックで、音楽の詳細はトップから外した
+- **シェアボタン（ヘッダー右上の丸いボタン1つだけ）は、どのページでも「サイト（Motion Imaging Lab）そのもの」をシェアする**（URLは`site.url`＝`https://motion-imaging-lab.vercel.app`、文面は`site.shareText`）。ページごとのシェアボタンは足さない（オーナー指示）。**`site.url`は本番ドメインにそろえる**（以前`scad-apps-lab.vercel.app`になっていて本番に紐づいていなかった）
 - **ヘッダー・フッターは共通部品**（`app/SiteHeader.jsx` / `app/SiteFooter.jsx`、リンクは`/#apps`の形）。右上の「アプリを使ってみる」は小さめ、スマホでは「アプリ」表記（はみ出し防止）
-- **音楽ページ `/music`**（`app/music/page.jsx`、文言は`site.config.js`の`music`）：JAKE SOLANO（上）とVERT5X（下）を混ぜずに並べる。各アーティストに紹介文・AI表記・画像・YouTube埋め込み・TikTokボタン・配信先カード（YouTube／TikTok／Spotify、同じ形・同じ高さ）
+- **音楽ページ `/music`**（`app/music/page.jsx`、文言は`site.config.js`の`music`）：JAKE SOLANO（上）・澄名凜奈（中）・VERT5X（下）を混ぜずに並べる。各アーティストに紹介文・AI表記・画像・YouTube埋め込み・TikTokボタン・配信先カード（YouTube／TikTok／Instagram／Spotify／Apple Music、同じ形・同じ高さ）。画像・TikTok・注記が無いアーティストでも表示できる作り（`site.config.js`の該当項目を空にする）
   - 表記：「JAKE SOLANO」（Jake本人の音楽名義、歌は本人・制作にAIツールも活用）／「VERT5X」（読みバーテックス、AIで作った架空のK-POP男性グループ、赤と黒）。レーベル名 MOTION IMAGING
+  - **澄名凜奈（読み：すみな りな）は、AIで制作したAIアーティスト**（「AIで制作したアーティスト（AIペルソナ）」と画面に明記、画像も「AI生成イメージ」）。**表記は「凜」（Apple Musicの登録に合わせた。「凛」ではない）**。リンク：YouTube `@sumina_rina_official`／Instagram `@sumina_rina_official`／Spotify・Apple Music（アーティストページ）。TikTokは無し。ジャンル・活動の説明は未記入、**YouTubeチャンネルIDは未取得**（PCで`youtube.com/account_advanced`に出る。入れると最新動画が埋め込みで出る。それまではボタンのみ）。YouTubeのアイコンはサイトの画像とは別の写真
   - YouTubeチャンネルID：JAKE SOLANO `UCGPyNoPcnQzj5ZyC7Zo4-4g`／VERT5X `UCQWChBX1fjygrXTnvS8OPYw`／生成AI活動（トップのAI動画）`UCg0Fmgw6ghTfvWGi6pAo4ww`
   - **YouTubeは「UC→UU」のアップロード一覧を`youtube-nocookie.com/embed/videoseries`で埋め込み、最新動画が自動で並ぶ**（`app/youtube.js`）。手で更新しない
   - **注意：どのチャンネルもショートだけ。** ショートは音源の権利や埋め込み設定で外部サイト再生が止まることがあり、先頭の1本で「動画を再生できません／動画をスキップ」が出る。サイトのコードの問題ではない。止まったらYouTube Studioでその動画の「埋め込みを許可」・著作権の申し立てを確認する。表示がおかしいときは、まずブラウザの強制再読み込み（Cmd+Shift+R）で古いキャッシュを疑う
